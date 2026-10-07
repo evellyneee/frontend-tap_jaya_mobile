@@ -5,6 +5,7 @@ import '../core/constants/app_colors.dart';
 import '../widgets/app_logo.dart';
 import 'detail_product_screen.dart';
 import 'cart_screen.dart';
+import 'status_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -407,11 +408,19 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Beranda',
               active: true,
             ),
+
             _buildNavItem(
               icon: Icons.receipt_long_outlined,
               label: 'Status & Riwayat',
               active: false,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const StatusScreen()),
+                );
+              },
             ),
+
             _buildNavItem(
               icon: Icons.info_outline,
               label: 'Info Cafe',
@@ -427,29 +436,33 @@ class _HomeScreenState extends State<HomeScreen> {
     required IconData icon,
     required String label,
     required bool active,
+    VoidCallback? onTap,
   }) {
     return Expanded(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 31,
-            color: active ? AppColors.red : const Color(0xFF737373),
-          ),
-
-          const SizedBox(height: 5),
-
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 31,
               color: active ? AppColors.red : const Color(0xFF737373),
             ),
-          ),
-        ],
+
+            const SizedBox(height: 5),
+
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                color: active ? AppColors.red : const Color(0xFF737373),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
