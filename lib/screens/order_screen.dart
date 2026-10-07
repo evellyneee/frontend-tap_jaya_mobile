@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
+import 'customer_information_screen.dart';
 
 class OrderScreen extends StatefulWidget {
   final int subtotal;
@@ -374,15 +375,12 @@ class _OrderScreenState extends State<OrderScreen> {
           height: 50,
           child: ElevatedButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  backgroundColor: AppColors.dark,
-                  content: Text(
-                    'Jenis pesanan: $selectedOrderType',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.white,
-                    ),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CustomerInformationScreen(
+                    orderType: selectedOrderType,
+                    totalPayment: totalPayment,
                   ),
                 ),
               );
@@ -396,7 +394,7 @@ class _OrderScreenState extends State<OrderScreen> {
               ),
             ),
             child: Text(
-              'Lanjut',
+              'Lanjut ke Informasi Pelanggan',
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
