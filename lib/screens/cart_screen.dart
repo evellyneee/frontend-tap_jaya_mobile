@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
 import 'cart_item_edit_screen.dart';
+import 'order_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -91,6 +92,19 @@ class _CartScreenState extends State<CartScreen> {
         cirengQuantity = result;
       });
     }
+  }
+
+  void _goToOrder() {
+    if (selectedCount == 0) {
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderScreen(subtotal: totalPrice),
+      ),
+    );
   }
 
   @override
@@ -200,7 +214,7 @@ class _CartScreenState extends State<CartScreen> {
                     SizedBox(
                       height: 42,
                       child: ElevatedButton(
-                        onPressed: selectedCount == 0 ? null : () {},
+                        onPressed: selectedCount == 0 ? null : _goToOrder,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.dark,
                           foregroundColor: Colors.white,
