@@ -6,6 +6,7 @@ import '../widgets/app_logo.dart';
 import 'detail_product_screen.dart';
 import 'cart_screen.dart';
 import 'status_screen.dart';
+import 'info_cafe_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -425,6 +426,15 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.info_outline,
               label: 'Info Cafe',
               active: false,
+            
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const InfoCafeScreen(),
+                  ),
+                );
+              },
             ),
           ],
         ),
