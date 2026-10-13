@@ -46,6 +46,7 @@ class CartStore extends ChangeNotifier {
 
     if (existingIndex >= 0) {
       _items[existingIndex].quantity += newItem.quantity;
+
       _items[existingIndex].isSelected = true;
     } else {
       _items.add(newItem);
@@ -65,6 +66,35 @@ class CartStore extends ChangeNotifier {
       _items.removeAt(index);
     } else {
       _items[index].quantity = quantity;
+    }
+
+    notifyListeners();
+  }
+
+  void updateItem({required String currentId, required CartItem updatedItem}) {
+    final int currentIndex = _items.indexWhere((item) => item.id == currentId);
+
+    if (currentIndex == -1) {
+      return;
+    }
+
+    final bool previousSelection = _items[currentIndex].isSelected;
+
+    final int sameConfigurationIndex = _items.indexWhere(
+      (item) => item.id == updatedItem.id && item.id != currentId,
+    );
+
+    if (sameConfigurationIndex >= 0) {
+      _items[sameConfigurationIndex].quantity += updatedItem.quantity;
+
+      _items[sameConfigurationIndex].isSelected =
+          _items[sameConfigurationIndex].isSelected || previousSelection;
+
+      _items.removeAt(currentIndex);
+    } else {
+      updatedItem.isSelected = previousSelection;
+
+      _items[currentIndex] = updatedItem;
     }
 
     notifyListeners();

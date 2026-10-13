@@ -44,7 +44,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _editItem(CartItem item) async {
-    final int? result = await Navigator.push<int>(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => CartItemEditScreen(
@@ -52,13 +52,17 @@ class _CartScreenState extends State<CartScreen> {
           imagePath: item.imagePath,
           unitPrice: item.unitPrice,
           initialQuantity: item.quantity,
+
+          // Data realtime item yang sedang diedit
+          itemId: item.id,
+          initialSize: item.size,
+          initialExtraShot: item.extraShot,
+          initialLessIce: item.lessIce,
+          initialLessSugar: item.lessSugar,
+          initialNote: item.note,
         ),
       ),
     );
-
-    if (result != null) {
-      cartStore.updateQuantity(item.id, result);
-    }
   }
 
   void _goToOrder() {
@@ -189,99 +193,125 @@ class _CartScreenState extends State<CartScreen> {
         border: Border.all(color: const Color(0xFFDEDAD5)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Checkbox(
-            value: item.isSelected,
-            activeColor: AppColors.dark,
-            onChanged: (value) {
-              cartStore.toggleItem(item.id, value ?? false);
-            },
+          Padding(
+            padding: const EdgeInsets.only(top: 13),
+            child: Checkbox(
+              value: item.isSelected,
+              activeColor: AppColors.dark,
+              onChanged: (value) {
+                cartStore.toggleItem(item.id, value ?? false);
+              },
+            ),
           ),
 
-          ClipRRect(
-            borderRadius: BorderRadius.circular(9),
-            child: Image.asset(
-              item.imagePath,
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(9),
+              child: Image.asset(
+                item.imagePath,
+                width: 72,
+                height: 72,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
 
           const SizedBox(width: 12),
 
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.productName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.dark,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.productName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.dark,
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 4),
-
-                Text(
-                  formatPrice(item.unitPrice),
-                  style: GoogleFonts.poppins(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.dark,
-                  ),
-                ),
-
-                if (item.size.isNotEmpty) ...[
                   const SizedBox(height: 4),
 
                   Text(
-                    _buildCustomizationText(item),
+                    formatPrice(item.unitPrice),
                     style: GoogleFonts.poppins(
-                      fontSize: 9,
-                      height: 1.4,
-                      color: AppColors.grey,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.dark,
                     ),
                   ),
-                ],
 
-                const SizedBox(height: 6),
+                  if (_hasCustomization(item)) ...[
+                    const SizedBox(height: 6),
 
-                Row(
-                  children: [
                     Text(
-                      '${item.quantity} item',
+                      _buildCustomizationText(item),
                       style: GoogleFonts.poppins(
                         fontSize: 9,
+                        height: 1.5,
                         color: AppColors.grey,
                       ),
                     ),
+                  ],
 
-                    const Spacer(),
+                  const SizedBox(height: 7),
 
-                    TextButton(
-                      onPressed: () {
-                        _editItem(item);
-                      },
-                      child: Text(
-                        'Ubah',
+                  Row(
+                    children: [
+                      Text(
+                        '${item.quantity} item',
                         style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.red,
+                          fontSize: 9,
+                          color: AppColors.grey,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+
+                      const Spacer(),
+
+                      TextButton(
+                        onPressed: () {
+                          _editItem(item);
+                        },
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: Text(
+                          'Ubah',
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.red,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  bool _hasCustomization(CartItem item) {
+    return item.size.isNotEmpty ||
+        item.extraShot ||
+        item.lessIce ||
+        item.lessSugar ||
+        item.note.isNotEmpty;
   }
 
   String _buildCustomizationText(CartItem item) {
