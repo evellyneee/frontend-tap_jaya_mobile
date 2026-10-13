@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
+import '../services/cart_store.dart';
 import '../widgets/app_logo.dart';
-import 'detail_product_screen.dart';
 import 'cart_screen.dart';
-import 'status_screen.dart';
+import 'detail_product_screen.dart';
 import 'info_cafe_screen.dart';
+import 'status_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,10 +20,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'Semua';
   String searchText = '';
 
-  // Keranjang awal kosong
-  int cartCount = 0;
-
   final TextEditingController searchController = TextEditingController();
+
+  final CartStore cartStore = CartStore.instance;
 
   final List<String> categories = ['Semua', 'Kopi', 'Non Kopi', 'Makanan'];
 
@@ -58,31 +58,42 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+
+    cartStore.addListener(_refreshCart);
+  }
+
+  void _refreshCart() {
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {});
+  }
+
+  @override
   void dispose() {
+    cartStore.removeListener(_refreshCart);
     searchController.dispose();
+
     super.dispose();
   }
 
   List<Map<String, String>> get filteredProducts {
     return products.where((product) {
-      final matchesCategory =
+      final bool matchesCategory =
           selectedCategory == 'Semua' ||
           product['category'] == selectedCategory;
 
-      final query = searchText.toLowerCase();
+      final String query = searchText.toLowerCase();
 
-      final matchesSearch =
+      final bool matchesSearch =
           product['name']!.toLowerCase().contains(query) ||
           product['description']!.toLowerCase().contains(query);
 
       return matchesCategory && matchesSearch;
     }).toList();
-  }
-
-  void addToCartFromDetail(int quantity) {
-    setState(() {
-      cartCount += quantity;
-    });
   }
 
   @override
@@ -143,6 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
+    final int cartCount = cartStore.totalQuantity;
+
     return Container(
       width: double.infinity,
       color: AppColors.dark,
@@ -205,7 +218,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   size: 28,
                 ),
 
-                // Badge hanya muncul kalau keranjang ada isinya
                 if (cartCount > 0)
                   Positioned(
                     right: -8,
@@ -318,8 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  DetailProductScreen(onAddToCart: addToCartFromDetail),
+              builder: (context) => const DetailProductScreen(),
             ),
           );
         }
@@ -426,7 +437,6 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: Icons.info_outline,
               label: 'Info Cafe',
               active: false,
-            
               onTap: () {
                 Navigator.push(
                   context,
