@@ -1,4 +1,13 @@
+
 # TAP JAYA Mobile
+
+## 📱 Screenshot Aplikasi
+
+Dokumentasi tampilan aplikasi TAP JAYA Mobile, mulai dari Splash Screen, Login, Home, Detail Produk, Kustomisasi Pesanan, hingga Keranjang Belanja, dapat dilihat melalui Google Drive berikut:
+
+📸 **[Lihat Screenshot Aplikasi TAP JAYA Mobile](https://drive.google.com/drive/folders/1o1whSXWvbjDszBCTzzY414Aemk6GMlVp)**
+
+---
 
 TAP JAYA Mobile adalah aplikasi mobile berbasis **Flutter** yang dibuat sebagai project UTS. Aplikasi ini dirancang untuk membantu pengguna melihat menu, mencari produk, memilih kategori, melihat detail produk, melakukan kustomisasi pesanan, mengatur jumlah item, serta menambahkan produk ke keranjang.
 
@@ -54,3 +63,4 @@ tap_jaya_mobile/
 │   └── main.dart
 ├── pubspec.yaml
 └── README.md
+```
