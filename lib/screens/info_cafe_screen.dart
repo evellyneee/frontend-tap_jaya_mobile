@@ -5,10 +5,16 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/constants/app_colors.dart';
 import '../widgets/app_logo.dart';
 
+import 'home_screen.dart';
+import 'status_screen.dart';
+
 class InfoCafeScreen extends StatelessWidget {
   const InfoCafeScreen({super.key});
 
-  void _showMessage(BuildContext context, String message) {
+  void _showMessage(
+    BuildContext context,
+    String message,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
@@ -16,11 +22,39 @@ class InfoCafeScreen extends StatelessWidget {
     );
   }
 
+  Route<void> _noAnimationRoute(Widget page) {
+    return PageRouteBuilder<void>(
+      pageBuilder: (
+        context,
+        animation,
+        secondaryAnimation,
+      ) {
+        return page;
+      },
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+    );
+  }
+
+  void _goToHome(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      _noAnimationRoute(const HomeScreen()),
+      (route) => false,
+    );
+  }
+
+  void _goToStatus(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      _noAnimationRoute(const StatusScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.warmWhite,
-
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -46,7 +80,7 @@ class InfoCafeScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo dan nama toko
+                    // Logo dan nama kafe
                     Row(
                       children: [
                         Container(
@@ -55,8 +89,7 @@ class InfoCafeScreen extends StatelessWidget {
                           padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
                             color: Colors.white,
-                            borderRadius:
-                                BorderRadius.circular(9),
+                            borderRadius: BorderRadius.circular(9),
                             border: Border.all(
                               color: const Color(0xFFE7E3DF),
                             ),
@@ -95,7 +128,7 @@ class InfoCafeScreen extends StatelessWidget {
 
                     const SizedBox(height: 30),
 
-                    // Kartu operasional
+                    // Informasi operasional
                     _buildInfoCard(
                       title: 'Layanan & Jam Operasional',
                       children: [
@@ -131,7 +164,7 @@ class InfoCafeScreen extends StatelessWidget {
 
                     const SizedBox(height: 18),
 
-                    // Kartu layanan pelanggan
+                    // Informasi layanan pelanggan
                     _buildInfoCard(
                       title: 'Layanan Pelanggan',
                       children: [
@@ -170,7 +203,6 @@ class InfoCafeScreen extends StatelessWidget {
           ],
         ),
       ),
-
       bottomNavigationBar:
           _buildBottomNavigation(context),
     );
@@ -274,7 +306,9 @@ class InfoCafeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget _buildBottomNavigation(
+    BuildContext context,
+  ) {
     return SafeArea(
       top: false,
       child: Container(
@@ -294,15 +328,14 @@ class InfoCafeScreen extends StatelessWidget {
               icon: Icons.home_outlined,
               label: 'Beranda',
               active: false,
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap: () => _goToHome(context),
             ),
 
             _buildNavItem(
               icon: Icons.receipt_long_outlined,
               label: 'Status & Riwayat',
               active: false,
+              onTap: () => _goToStatus(context),
             ),
 
             _buildNavItem(

@@ -1,76 +1,62 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
 import '../models/cart_item.dart';
 import '../services/cart_store.dart';
+import 'order_screen.dart';
 
 class DetailProductScreen extends StatefulWidget {
   final ValueChanged<int>? onAddToCart;
 
-  const DetailProductScreen({super.key, this.onAddToCart});
+  const DetailProductScreen({
+    super.key,
+    this.onAddToCart,
+  });
 
   @override
-  State<DetailProductScreen> createState() => _DetailProductScreenState();
+  State<DetailProductScreen> createState() =>
+      _DetailProductScreenState();
 }
 
 class _DetailProductScreenState extends State<DetailProductScreen> {
   String selectedSize = 'Large';
-
   bool extraShot = false;
   bool lessIce = false;
   bool lessSugar = true;
-
-  // Quantity awal harus 1, bukan 3.
   int quantity = 1;
 
-  final TextEditingController noteController = TextEditingController();
+  final TextEditingController noteController =
+      TextEditingController();
 
-  int get basePrice {
-    if (selectedSize == 'Regular') {
-      return 24545;
-    }
+  int get basePrice =>
+      selectedSize == 'Regular' ? 24545 : 30000;
 
-    return 30000;
-  }
+  int get additionalPrice => extraShot ? 5000 : 0;
 
-  int get additionalPrice {
-    int total = 0;
+  int get unitPrice => basePrice + additionalPrice;
 
-    if (extraShot) {
-      total += 5000;
-    }
-
-    return total;
-  }
-
-  int get unitPrice {
-    return basePrice + additionalPrice;
-  }
-
-  int get totalPrice {
-    return unitPrice * quantity;
-  }
+  int get totalPrice => unitPrice * quantity;
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+    return 'Rp ${value.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    )}';
   }
 
-  String get cartItemId {
-    final String note = noteController.text.trim();
+  String get cartItemId => [
+        'kopi-susu-berjaya-di-bali',
+        selectedSize,
+        extraShot ? 'extra-shot' : 'no-extra-shot',
+        lessIce ? 'less-ice' : 'normal-ice',
+        lessSugar ? 'less-sugar' : 'normal-sugar',
+        noteController.text.trim(),
+      ].join('|');
 
-    return [
-      'kopi-susu-berjaya-di-bali',
-      selectedSize,
-      extraShot ? 'extra-shot' : 'no-extra-shot',
-      lessIce ? 'less-ice' : 'normal-ice',
-      lessSugar ? 'less-sugar' : 'normal-sugar',
-      note,
-    ].join('|');
-  }
-
-  void addToCart() {
-    final CartItem item = CartItem(
+  CartItem createOrderItem() {
+    return CartItem(
       id: cartItemId,
       productName: 'Kopi Susu Berjaya di Bali',
       imagePath: 'assets/images/kopi_susu_bali.png',
@@ -82,21 +68,37 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
       lessSugar: lessSugar,
       note: noteController.text.trim(),
     );
+  }
 
-    CartStore.instance.addItem(item);
-
-    // Dipertahankan sementara agar kompatibel
-    // dengan HomeScreen versi sebelum direvisi.
+  void addToCart() {
+    CartStore.instance.addItem(createOrderItem());
     widget.onAddToCart?.call(quantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: AppColors.dark,
+        duration: const Duration(seconds: 2),
         content: Text(
           '$quantity item berhasil ditambahkan ke keranjang',
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 12,
+          ),
         ),
-        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void buyNow() {
+    final CartItem item = createOrderItem();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderScreen(
+          subtotal: totalPrice,
+          orderItems: [item],
+        ),
       ),
     );
   }
@@ -115,7 +117,6 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         child: Column(
           children: [
             _buildHeader(),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -123,29 +124,17 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProductImage(),
-
                     const SizedBox(height: 20),
-
                     _buildProductInfo(),
-
                     const SizedBox(height: 20),
-
                     _buildSizeSection(),
-
                     const SizedBox(height: 18),
-
                     _buildAdditionalSection(),
-
                     const SizedBox(height: 18),
-
                     _buildNoteSection(),
-
                     const SizedBox(height: 18),
-
                     _buildTotal(),
-
                     const SizedBox(height: 18),
-
                     _buildBottomActions(),
                   ],
                 ),
@@ -166,9 +155,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(
                 Icons.arrow_back,
                 size: 28,
@@ -176,7 +163,6 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
               ),
             ),
           ),
-
           Text(
             'Detail Menu',
             style: GoogleFonts.poppins(
@@ -211,7 +197,9 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E0DB)),
+        border: Border.all(
+          color: const Color(0xFFE5E0DB),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -224,9 +212,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             formatPrice(unitPrice),
             style: GoogleFonts.poppins(
@@ -235,9 +221,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 8),
-
           Text(
             'Perpaduan espresso mantap, susu creamy, dan gula aren khas Bali dengan cita rasa manis yang pas.',
             style: GoogleFonts.poppins(
@@ -263,16 +247,19 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             color: AppColors.dark,
           ),
         ),
-
         const SizedBox(height: 8),
-
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E0DB)),
+            border: Border.all(
+              color: const Color(0xFFE5E0DB),
+            ),
           ),
           child: Column(
             children: [
@@ -281,7 +268,6 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                 label: 'Regular (R)',
                 price: 'Rp 24.545',
               ),
-
               _buildSizeOption(
                 value: 'Large',
                 label: 'Large (L)',
@@ -312,24 +298,25 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
               size: 20,
               color: AppColors.dark,
             ),
-
             const SizedBox(width: 8),
-
             Expanded(
               child: Text(
                 label,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: selected
+                      ? FontWeight.w600
+                      : FontWeight.w400,
                   color: AppColors.dark,
                 ),
               ),
             ),
-
             Text(
               price,
               style: GoogleFonts.poppins(
@@ -356,16 +343,19 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             color: AppColors.dark,
           ),
         ),
-
         const SizedBox(height: 8),
-
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E0DB)),
+            border: Border.all(
+              color: const Color(0xFFE5E0DB),
+            ),
           ),
           child: Column(
             children: [
@@ -379,7 +369,6 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                   });
                 },
               ),
-
               _buildAdditionalOption(
                 label: 'Less Ice',
                 price: '+Rp 0',
@@ -390,7 +379,6 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                   });
                 },
               ),
-
               _buildAdditionalOption(
                 label: 'Less Sugar',
                 price: '+Rp 0',
@@ -415,31 +403,34 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     required ValueChanged<bool> onChanged,
   }) {
     return InkWell(
-      onTap: () {
-        onChanged(!value);
-      },
+      onTap: () => onChanged(!value),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
             Icon(
-              value ? Icons.check_box : Icons.check_box_outline_blank,
+              value
+                  ? Icons.check_box
+                  : Icons.check_box_outline_blank,
               size: 20,
               color: AppColors.dark,
             ),
-
             const SizedBox(width: 8),
-
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: AppColors.dark,
+                ),
               ),
             ),
-
             Text(
               price,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: AppColors.dark,
+              ),
             ),
           ],
         ),
@@ -459,15 +450,20 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             color: AppColors.dark,
           ),
         ),
-
         const SizedBox(height: 8),
-
         TextField(
           controller: noteController,
-          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: AppColors.dark,
+          ),
           decoration: InputDecoration(
-            hintText: 'Tambah catatan pesanan (misal: sedikit es)...',
-            hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+            hintText:
+                'Tambah catatan pesanan (misal: sedikit es)...',
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
@@ -476,15 +472,21 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E0DB),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E0DB),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.dark),
+              borderSide: const BorderSide(
+                color: AppColors.dark,
+              ),
             ),
           ),
         ),
@@ -512,7 +514,9 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: const Color(0xFFD8D3CE)),
+            border: Border.all(
+              color: const Color(0xFFD8D3CE),
+            ),
           ),
           child: Row(
             children: [
@@ -524,11 +528,12 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                     });
                   }
                 },
-                child: const Icon(Icons.remove_circle_outline, size: 21),
+                child: const Icon(
+                  Icons.remove_circle_outline,
+                  size: 21,
+                ),
               ),
-
               const SizedBox(width: 7),
-
               Text(
                 '$quantity',
                 style: GoogleFonts.poppins(
@@ -536,23 +541,22 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-
               const SizedBox(width: 7),
-
               GestureDetector(
                 onTap: () {
                   setState(() {
                     quantity++;
                   });
                 },
-                child: const Icon(Icons.add_circle_outline, size: 21),
+                child: const Icon(
+                  Icons.add_circle_outline,
+                  size: 21,
+                ),
               ),
             ],
           ),
         ),
-
         const SizedBox(width: 10),
-
         SizedBox(
           width: 90,
           height: 46,
@@ -561,7 +565,9 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
               backgroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFFD8D3CE)),
+              side: const BorderSide(
+                color: Color(0xFFD8D3CE),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(9),
               ),
@@ -569,10 +575,12 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.add, size: 23, color: AppColors.dark),
-
+                Icon(
+                  Icons.add,
+                  size: 23,
+                  color: AppColors.dark,
+                ),
                 SizedBox(width: 3),
-
                 Icon(
                   Icons.shopping_cart_outlined,
                   size: 25,
@@ -582,19 +590,19 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             ),
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: SizedBox(
             height: 46,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: buyNow,
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.dark,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9),
                 ),

@@ -1,10 +1,15 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
 import '../services/cart_store.dart';
 import '../widgets/app_logo.dart';
+
 import 'cart_screen.dart';
+import 'detail_bakmie_screen.dart';
+import 'detail_cireng_screen.dart';
+import 'detail_milkshake_screen.dart';
 import 'detail_product_screen.dart';
 import 'info_cafe_screen.dart';
 import 'status_screen.dart';
@@ -20,11 +25,17 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'Semua';
   String searchText = '';
 
-  final TextEditingController searchController = TextEditingController();
+  final TextEditingController searchController =
+      TextEditingController();
 
   final CartStore cartStore = CartStore.instance;
 
-  final List<String> categories = ['Semua', 'Kopi', 'Non Kopi', 'Makanan'];
+  final List<String> categories = [
+    'Semua',
+    'Kopi',
+    'Non Kopi',
+    'Makanan',
+  ];
 
   final List<Map<String, String>> products = [
     {
@@ -60,14 +71,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
     cartStore.addListener(_refreshCart);
   }
 
   void _refreshCart() {
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     setState(() {});
   }
@@ -76,8 +84,36 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     cartStore.removeListener(_refreshCart);
     searchController.dispose();
-
     super.dispose();
+  }
+
+  // Route tanpa animasi khusus navigasi bawah.
+  Route<void> _noAnimationRoute(Widget page) {
+    return PageRouteBuilder<void>(
+      pageBuilder: (
+        context,
+        animation,
+        secondaryAnimation,
+      ) {
+        return page;
+      },
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+    );
+  }
+
+  void _openStatus() {
+    Navigator.push(
+      context,
+      _noAnimationRoute(const StatusScreen()),
+    );
+  }
+
+  void _openInfoCafe() {
+    Navigator.push(
+      context,
+      _noAnimationRoute(const InfoCafeScreen()),
+    );
   }
 
   List<Map<String, String>> get filteredProducts {
@@ -96,6 +132,47 @@ class _HomeScreenState extends State<HomeScreen> {
     }).toList();
   }
 
+  void _openProductDetail(
+    Map<String, String> product,
+  ) {
+    final String? name = product['name'];
+
+    // Navigasi Detail Menu tetap seperti sebelumnya.
+    if (name == 'Kopi Susu Berjaya di Bali') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const DetailProductScreen(),
+        ),
+      );
+    } else if (name == 'Bakmie Jaya') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const DetailBakmieScreen(),
+        ),
+      );
+    } else if (name == 'Milkshake Sweet Mango') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const DetailMilkshakeScreen(),
+        ),
+      );
+    } else if (name == 'Cireng') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              const DetailCirengScreen(),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -105,20 +182,20 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           children: [
             _buildHeader(),
-
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                padding: const EdgeInsets.fromLTRB(
+                  18,
+                  14,
+                  18,
+                  18,
+                ),
                 child: Column(
                   children: [
                     _buildSearch(),
-
                     const SizedBox(height: 12),
-
                     _buildCategories(),
-
                     const SizedBox(height: 18),
-
                     if (filteredProducts.isEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 50),
@@ -132,14 +209,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       )
                     else
                       ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
+                        physics:
+                            const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemCount: filteredProducts.length,
                         separatorBuilder: (context, index) {
                           return const SizedBox(height: 14);
                         },
                         itemBuilder: (context, index) {
-                          return _buildProductCard(filteredProducts[index]);
+                          return _buildProductCard(
+                            filteredProducts[index],
+                          );
                         },
                       ),
                   ],
@@ -159,7 +239,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: double.infinity,
       color: AppColors.dark,
-      padding: const EdgeInsets.fromLTRB(18, 15, 18, 15),
+      padding: const EdgeInsets.fromLTRB(
+        18,
+        15,
+        18,
+        15,
+      ),
       child: Row(
         children: [
           Container(
@@ -187,9 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-
                 const SizedBox(height: 2),
-
                 Text(
                   'Mau pesan apa hari ini?',
                   style: GoogleFonts.poppins(
@@ -206,7 +289,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const CartScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const CartScreen(),
+                ),
               );
             },
             child: Stack(
@@ -227,7 +312,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         minWidth: 18,
                         minHeight: 18,
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                      ),
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
                         color: AppColors.red,
@@ -261,7 +348,10 @@ class _HomeScreenState extends State<HomeScreen> {
             searchText = value;
           });
         },
-        style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+        style: GoogleFonts.poppins(
+          fontSize: 12,
+          color: AppColors.dark,
+        ),
         decoration: InputDecoration(
           hintText: 'Cari menu...',
           hintStyle: GoogleFonts.poppins(
@@ -276,15 +366,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(color: Color(0xFFE6E3DF)),
+            borderSide: const BorderSide(
+              color: Color(0xFFE6E3DF),
+            ),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(color: Color(0xFFE6E3DF)),
+            borderSide: const BorderSide(
+              color: Color(0xFFE6E3DF),
+            ),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(color: AppColors.dark, width: 1),
+            borderSide: const BorderSide(
+              color: AppColors.dark,
+              width: 1,
+            ),
           ),
         ),
       ),
@@ -295,7 +392,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: categories.map((category) {
-        final bool active = selectedCategory == category;
+        final bool active =
+            selectedCategory == category;
 
         return GestureDetector(
           onTap: () {
@@ -304,9 +402,14 @@ class _HomeScreenState extends State<HomeScreen> {
             });
           },
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 15,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
-              color: active ? AppColors.dark : const Color(0xFFF5EDE5),
+              color: active
+                  ? AppColors.dark
+                  : const Color(0xFFF5EDE5),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -314,7 +417,9 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
-                color: active ? Colors.white : AppColors.dark,
+                color: active
+                    ? Colors.white
+                    : AppColors.dark,
               ),
             ),
           ),
@@ -323,18 +428,11 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildProductCard(Map<String, String> product) {
+  Widget _buildProductCard(
+    Map<String, String> product,
+  ) {
     return InkWell(
-      onTap: () {
-        if (product['name'] == 'Kopi Susu Berjaya di Bali') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DetailProductScreen(),
-            ),
-          );
-        }
-      },
+      onTap: () => _openProductDetail(product),
       borderRadius: BorderRadius.circular(18),
       child: Container(
         width: double.infinity,
@@ -342,7 +440,10 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFDEDAD5), width: 1),
+          border: Border.all(
+            color: const Color(0xFFDEDAD5),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
@@ -370,9 +471,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: AppColors.dark,
                     ),
                   ),
-
                   const SizedBox(height: 5),
-
                   Text(
                     product['description']!,
                     maxLines: 2,
@@ -384,9 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: const Color(0xFF8F8F8F),
                     ),
                   ),
-
                   const SizedBox(height: 7),
-
                   Text(
                     product['price']!,
                     style: GoogleFonts.poppins(
@@ -411,7 +508,12 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 86,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE7E3DF), width: 1)),
+          border: Border(
+            top: BorderSide(
+              color: Color(0xFFE7E3DF),
+              width: 1,
+            ),
+          ),
         ),
         child: Row(
           children: [
@@ -420,31 +522,17 @@ class _HomeScreenState extends State<HomeScreen> {
               label: 'Beranda',
               active: true,
             ),
-
             _buildNavItem(
               icon: Icons.receipt_long_outlined,
               label: 'Status & Riwayat',
               active: false,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const StatusScreen()),
-                );
-              },
+              onTap: _openStatus,
             ),
-
             _buildNavItem(
               icon: Icons.info_outline,
               label: 'Info Cafe',
               active: false,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const InfoCafeScreen(),
-                  ),
-                );
-              },
+              onTap: _openInfoCafe,
             ),
           ],
         ),
@@ -467,18 +555,22 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               icon,
               size: 31,
-              color: active ? AppColors.red : const Color(0xFF737373),
+              color: active
+                  ? AppColors.red
+                  : const Color(0xFF737373),
             ),
-
             const SizedBox(height: 5),
-
             Text(
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                color: active ? AppColors.red : const Color(0xFF737373),
+                fontWeight: active
+                    ? FontWeight.w600
+                    : FontWeight.w400,
+                color: active
+                    ? AppColors.red
+                    : const Color(0xFF737373),
               ),
             ),
           ],

@@ -1,7 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
+import 'home_screen.dart';
+import 'info_cafe_screen.dart';
 
 class StatusScreen extends StatefulWidget {
   const StatusScreen({super.key});
@@ -12,6 +15,35 @@ class StatusScreen extends StatefulWidget {
 
 class _StatusScreenState extends State<StatusScreen> {
   int selectedTab = 0;
+
+  Route<void> _noAnimationRoute(Widget page) {
+    return PageRouteBuilder<void>(
+      pageBuilder: (
+        context,
+        animation,
+        secondaryAnimation,
+      ) {
+        return page;
+      },
+      transitionDuration: Duration.zero,
+      reverseTransitionDuration: Duration.zero,
+    );
+  }
+
+  void _goToHome() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      _noAnimationRoute(const HomeScreen()),
+      (route) => false,
+    );
+  }
+
+  void _goToInfoCafe() {
+    Navigator.pushReplacement(
+      context,
+      _noAnimationRoute(const InfoCafeScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +56,9 @@ class _StatusScreenState extends State<StatusScreen> {
             _buildHeader(),
             _buildTabBar(),
             Expanded(
-              child: selectedTab == 0 ? _buildActiveOrder() : _buildHistory(),
+              child: selectedTab == 0
+                  ? _buildActiveOrder()
+                  : _buildHistory(),
             ),
           ],
         ),
@@ -32,10 +66,6 @@ class _StatusScreenState extends State<StatusScreen> {
       bottomNavigationBar: _buildBottomNavigation(),
     );
   }
-
-  // =============================
-  // HEADER
-  // =============================
 
   Widget _buildHeader() {
     return Container(
@@ -45,9 +75,7 @@ class _StatusScreenState extends State<StatusScreen> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () {
-              Navigator.pop(context);
-            },
+            onTap: _goToHome,
             child: const Icon(
               Icons.arrow_back_ios_new,
               size: 19,
@@ -72,23 +100,28 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // =============================
-  // TAB
-  // =============================
-
   Widget _buildTabBar() {
     return Container(
       color: Colors.white,
       child: Row(
         children: [
-          _buildTab(title: 'Pesanan Aktif', index: 0),
-          _buildTab(title: 'Riwayat Pesanan', index: 1),
+          _buildTab(
+            title: 'Pesanan Aktif',
+            index: 0,
+          ),
+          _buildTab(
+            title: 'Riwayat Pesanan',
+            index: 1,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTab({required String title, required int index}) {
+  Widget _buildTab({
+    required String title,
+    required int index,
+  }) {
     final bool active = selectedTab == index;
 
     return Expanded(
@@ -103,7 +136,9 @@ class _StatusScreenState extends State<StatusScreen> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: active ? AppColors.red : AppColors.lightGrey,
+                color: active
+                    ? AppColors.red
+                    : AppColors.lightGrey,
                 width: active ? 2.5 : 1,
               ),
             ),
@@ -113,18 +148,18 @@ class _StatusScreenState extends State<StatusScreen> {
             title,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              color: active ? AppColors.red : AppColors.grey,
+              fontWeight: active
+                  ? FontWeight.w600
+                  : FontWeight.w400,
+              color: active
+                  ? AppColors.red
+                  : AppColors.grey,
             ),
           ),
         ),
       ),
     );
   }
-
-  // =============================
-  // PESANAN AKTIF
-  // =============================
 
   Widget _buildActiveOrder() {
     return SingleChildScrollView(
@@ -140,20 +175,17 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             'Pantau perkembangan pesananmu di sini',
-            style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
           ),
-
           const SizedBox(height: 16),
-
           _buildOrderInformation(),
-
           const SizedBox(height: 16),
-
           _buildStatusProgress(),
         ],
       ),
@@ -167,7 +199,9 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.lightGrey),
+        border: Border.all(
+          color: AppColors.lightGrey,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +231,6 @@ class _StatusScreenState extends State<StatusScreen> {
                   ],
                 ),
               ),
-
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 10,
@@ -218,25 +251,27 @@ class _StatusScreenState extends State<StatusScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 14),
-
-          const Divider(height: 1, color: AppColors.lightGrey),
-
+          const Divider(
+            height: 1,
+            color: AppColors.lightGrey,
+          ),
           const SizedBox(height: 14),
-
-          _buildInfoRow(label: 'Nama Pelanggan', value: 'Gunawan'),
-
+          _buildInfoRow(
+            label: 'Nama Pelanggan',
+            value: 'Gunawan',
+          ),
           const SizedBox(height: 10),
-
-          _buildInfoRow(label: 'Nomor Meja', value: '12'),
-
+          _buildInfoRow(
+            label: 'Nomor Meja',
+            value: '12',
+          ),
           const SizedBox(height: 10),
-
-          _buildInfoRow(label: 'Tipe Pesanan', value: 'Makan di Tempat'),
-
+          _buildInfoRow(
+            label: 'Tipe Pesanan',
+            value: 'Makan di Tempat',
+          ),
           const SizedBox(height: 16),
-
           Text(
             'Detail Pesanan',
             style: GoogleFonts.poppins(
@@ -245,17 +280,13 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 12),
-
           _buildProductItem(
             image: 'assets/images/milkshake_sweet_mango.png',
             name: 'Milkshake Sweet Mango',
             quantity: '2x',
           ),
-
           const SizedBox(height: 12),
-
           _buildProductItem(
             image: 'assets/images/cireng.png',
             name: 'Cireng',
@@ -266,13 +297,19 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  Widget _buildInfoRow({required String label, required String value}) {
+  Widget _buildInfoRow({
+    required String label,
+    required String value,
+  }) {
     return Row(
       children: [
         Expanded(
           child: Text(
             label,
-            style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
           ),
         ),
         Text(
@@ -296,11 +333,14 @@ class _StatusScreenState extends State<StatusScreen> {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.asset(image, width: 48, height: 48, fit: BoxFit.cover),
+          child: Image.asset(
+            image,
+            width: 48,
+            height: 48,
+            fit: BoxFit.cover,
+          ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: Text(
             name,
@@ -311,7 +351,6 @@ class _StatusScreenState extends State<StatusScreen> {
             ),
           ),
         ),
-
         Text(
           quantity,
           style: GoogleFonts.poppins(
@@ -324,10 +363,6 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // =============================
-  // PROGRESS STATUS
-  // =============================
-
   Widget _buildStatusProgress() {
     return Container(
       width: double.infinity,
@@ -335,7 +370,9 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.lightGrey),
+        border: Border.all(
+          color: AppColors.lightGrey,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,9 +385,7 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 18),
-
           _buildProgressItem(
             title: 'Pesanan Diterima',
             subtitle: 'Pesanan sudah diterima',
@@ -358,7 +393,6 @@ class _StatusScreenState extends State<StatusScreen> {
             completed: true,
             last: false,
           ),
-
           _buildProgressItem(
             title: 'Sedang Diproses',
             subtitle: 'Pesanan sedang disiapkan',
@@ -366,7 +400,6 @@ class _StatusScreenState extends State<StatusScreen> {
             completed: false,
             last: false,
           ),
-
           _buildProgressItem(
             title: 'Pesanan Siap',
             subtitle: 'Pesanan siap disajikan',
@@ -396,35 +429,42 @@ class _StatusScreenState extends State<StatusScreen> {
               height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: active ? AppColors.red : Colors.white,
+                color: active
+                    ? AppColors.red
+                    : Colors.white,
                 border: Border.all(
-                  color: active ? AppColors.red : AppColors.lightGrey,
+                  color: active
+                      ? AppColors.red
+                      : AppColors.lightGrey,
                   width: 2,
                 ),
               ),
               child: completed
-                  ? const Icon(Icons.check, size: 13, color: Colors.white)
-                  : active
-                  ? const Center(
-                      child: CircleAvatar(
-                        radius: 3,
-                        backgroundColor: Colors.white,
-                      ),
+                  ? const Icon(
+                      Icons.check,
+                      size: 13,
+                      color: Colors.white,
                     )
-                  : null,
+                  : active
+                      ? const Center(
+                          child: CircleAvatar(
+                            radius: 3,
+                            backgroundColor: Colors.white,
+                          ),
+                        )
+                      : null,
             ),
-
             if (!last)
               Container(
                 width: 2,
                 height: 45,
-                color: active ? AppColors.red : AppColors.lightGrey,
+                color: active
+                    ? AppColors.red
+                    : AppColors.lightGrey,
               ),
           ],
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 18),
@@ -436,7 +476,9 @@ class _StatusScreenState extends State<StatusScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: active ? AppColors.dark : AppColors.grey,
+                    color: active
+                        ? AppColors.dark
+                        : AppColors.grey,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -455,10 +497,6 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // =============================
-  // RIWAYAT PESANAN
-  // =============================
-
   Widget _buildHistory() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
@@ -473,16 +511,15 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 4),
-
           Text(
             'Lihat kembali transaksi yang pernah dilakukan',
-            style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
           ),
-
           const SizedBox(height: 16),
-
           _buildHistoryCard(
             date: '07 Oktober 2026',
             id: 'ORD-20261007-001',
@@ -491,9 +528,7 @@ class _StatusScreenState extends State<StatusScreen> {
             quantity: '2 item',
             total: 'Rp 73.000',
           ),
-
           const SizedBox(height: 14),
-
           _buildHistoryCard(
             date: '05 Oktober 2026',
             id: 'ORD-20261005-008',
@@ -521,7 +556,9 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.lightGrey),
+        border: Border.all(
+          color: AppColors.lightGrey,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -530,11 +567,12 @@ class _StatusScreenState extends State<StatusScreen> {
             children: [
               Text(
                 date,
-                style: GoogleFonts.poppins(fontSize: 9, color: AppColors.grey),
+                style: GoogleFonts.poppins(
+                  fontSize: 9,
+                  color: AppColors.grey,
+                ),
               ),
-
               const Spacer(),
-
               Text(
                 'Selesai',
                 style: GoogleFonts.poppins(
@@ -545,9 +583,7 @@ class _StatusScreenState extends State<StatusScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 4),
-
           Text(
             id,
             style: GoogleFonts.poppins(
@@ -556,9 +592,7 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 12),
-
           Row(
             children: [
               ClipRRect(
@@ -570,9 +604,7 @@ class _StatusScreenState extends State<StatusScreen> {
                   fit: BoxFit.cover,
                 ),
               ),
-
               const SizedBox(width: 12),
-
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -585,9 +617,7 @@ class _StatusScreenState extends State<StatusScreen> {
                         color: AppColors.dark,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       quantity,
                       style: GoogleFonts.poppins(
@@ -600,22 +630,22 @@ class _StatusScreenState extends State<StatusScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 12),
-
-          const Divider(height: 1, color: AppColors.lightGrey),
-
+          const Divider(
+            height: 1,
+            color: AppColors.lightGrey,
+          ),
           const SizedBox(height: 11),
-
           Row(
             children: [
               Text(
                 'Total Pembayaran',
-                style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  color: AppColors.grey,
+                ),
               ),
-
               const Spacer(),
-
               Text(
                 total,
                 style: GoogleFonts.poppins(
@@ -631,10 +661,6 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // =============================
-  // BOTTOM NAVIGATION
-  // =============================
-
   Widget _buildBottomNavigation() {
     return SafeArea(
       top: false,
@@ -642,7 +668,12 @@ class _StatusScreenState extends State<StatusScreen> {
         height: 86,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(top: BorderSide(color: Color(0xFFE7E3DF), width: 1)),
+          border: Border(
+            top: BorderSide(
+              color: Color(0xFFE7E3DF),
+              width: 1,
+            ),
+          ),
         ),
         child: Row(
           children: [
@@ -650,21 +681,18 @@ class _StatusScreenState extends State<StatusScreen> {
               icon: Icons.home_outlined,
               label: 'Beranda',
               active: false,
-              onTap: () {
-                Navigator.pop(context);
-              },
+              onTap: _goToHome,
             ),
-
             _buildNavItem(
               icon: Icons.receipt_long_outlined,
               label: 'Status & Riwayat',
               active: true,
             ),
-
             _buildNavItem(
               icon: Icons.info_outline,
               label: 'Info Cafe',
               active: false,
+              onTap: _goToInfoCafe,
             ),
           ],
         ),
@@ -687,18 +715,22 @@ class _StatusScreenState extends State<StatusScreen> {
             Icon(
               icon,
               size: 31,
-              color: active ? AppColors.red : const Color(0xFF737373),
+              color: active
+                  ? AppColors.red
+                  : const Color(0xFF737373),
             ),
-
             const SizedBox(height: 5),
-
             Text(
               label,
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                color: active ? AppColors.red : const Color(0xFF737373),
+                fontWeight: active
+                    ? FontWeight.w600
+                    : FontWeight.w400,
+                color: active
+                    ? AppColors.red
+                    : const Color(0xFF737373),
               ),
             ),
           ],
