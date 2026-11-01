@@ -10,8 +10,8 @@ import 'customer_information_screen.dart';
 class OrderScreen extends StatefulWidget {
   final int subtotal;
 
-  // Untuk Beli Sekarang: dikirim dari Detail Menu.
-  // Untuk Checkout Keranjang: otomatis membaca item terpilih.
+  // Jika null, checkout berasal dari keranjang.
+  // Jika berisi produk, alurnya Beli Sekarang.
   final List<CartItem>? orderItems;
 
   const OrderScreen({
@@ -28,20 +28,38 @@ class _OrderScreenState extends State<OrderScreen> {
   String selectedOrderType = 'Makan di Tempat';
 
   late final List<CartItem> itemsToOrder;
+  late final bool isCartCheckout;
 
   @override
   void initState() {
     super.initState();
 
-    // Simpan salinan daftar item saat halaman Order dibuka.
-    // Beli Sekarang tidak mengambil isi keranjang.
-    // Checkout dari keranjang hanya mengambil item dicentang.
-    itemsToOrder = List<CartItem>.from(
-      widget.orderItems ??
-          CartStore.instance.items.where(
-            (item) => item.isSelected,
-          ),
-    );
+    // Menandai asal transaksi tanpa mengubah
+    // cara pemanggilan OrderScreen yang sudah ada.
+    isCartCheckout = widget.orderItems == null;
+
+    final sourceItems = widget.orderItems ??
+        CartStore.instance.items
+            .where((item) => item.isSelected)
+            .toList();
+
+    // Snapshot supaya jumlah dan konfigurasi
+    // pesanan tidak berubah selama checkout.
+    itemsToOrder = sourceItems.map((item) {
+      return CartItem(
+        id: item.id,
+        productName: item.productName,
+        imagePath: item.imagePath,
+        unitPrice: item.unitPrice,
+        quantity: item.quantity,
+        isSelected: item.isSelected,
+        size: item.size,
+        extraShot: item.extraShot,
+        lessIce: item.lessIce,
+        lessSugar: item.lessSugar,
+        note: item.note,
+      );
+    }).toList();
   }
 
   String formatPrice(int value) {
@@ -77,8 +95,6 @@ class _OrderScreenState extends State<OrderScreen> {
       details.add('Less Sugar');
     }
 
-    // Extra Sambal tersimpan di note pada model lama.
-    // Pisahkan agar tampil sebagai additional.
     if (item.productName == 'Cireng' &&
         item.note.contains('Extra Sambal (+Rp 2.000)')) {
       details.add('Extra Sambal (+Rp 2.000)');
@@ -108,7 +124,6 @@ class _OrderScreenState extends State<OrderScreen> {
         child: Column(
           children: [
             _buildHeader(),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
@@ -125,14 +140,11 @@ class _OrderScreenState extends State<OrderScreen> {
                     _buildOrderTypeInformation(),
 
                     const SizedBox(height: 24),
-
-                    // BAGIAN BARU
                     _buildSectionTitle('Ringkasan Pesanan'),
                     const SizedBox(height: 10),
                     _buildOrderSummary(),
 
                     const SizedBox(height: 28),
-
                     _buildSectionTitle('Ringkasan Pembayaran'),
                     const SizedBox(height: 10),
                     _buildPaymentSummary(),
@@ -143,7 +155,6 @@ class _OrderScreenState extends State<OrderScreen> {
                 ),
               ),
             ),
-
             _buildBottomButton(),
           ],
         ),
@@ -171,9 +182,7 @@ class _OrderScreenState extends State<OrderScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(
                 Icons.arrow_back,
                 color: AppColors.dark,
@@ -339,7 +348,6 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-  // RINGKASAN PESANAN BARU
   Widget _buildOrderSummary() {
     return Container(
       width: double.infinity,
@@ -362,7 +370,7 @@ class _OrderScreenState extends State<OrderScreen> {
           : Column(
               children: [
                 for (int i = 0; i < itemsToOrder.length; i++) ...[
-                  if (i > 0) ...[
+                  if (i > 0)
                     const Padding(
                       padding: EdgeInsets.symmetric(
                         vertical: 14,
@@ -372,7 +380,6 @@ class _OrderScreenState extends State<OrderScreen> {
                         color: Color(0xFFE2DED9),
                       ),
                     ),
-                  ],
                   _buildOrderItem(itemsToOrder[i]),
                 ],
               ],
@@ -381,8 +388,8 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderItem(CartItem item) {
-    final List<String> details = getItemDetails(item);
-    final String customerNote = getCustomerNote(item);
+    final details = getItemDetails(item);
+    final customerNote = getCustomerNote(item);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,9 +406,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 fit: BoxFit.cover,
               ),
             ),
-
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,9 +419,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       color: AppColors.dark,
                     ),
                   ),
-
                   const SizedBox(height: 4),
-
                   Text(
                     '${item.quantity} item × ${formatPrice(item.unitPrice)}',
                     style: GoogleFonts.poppins(
@@ -424,9 +427,7 @@ class _OrderScreenState extends State<OrderScreen> {
                       color: AppColors.grey,
                     ),
                   ),
-
                   const SizedBox(height: 5),
-
                   Text(
                     formatPrice(
                       item.quantity * item.unitPrice,
@@ -442,10 +443,8 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ],
         ),
-
         if (details.isNotEmpty) ...[
           const SizedBox(height: 10),
-
           Text(
             details.join(' • '),
             style: GoogleFonts.poppins(
@@ -455,10 +454,8 @@ class _OrderScreenState extends State<OrderScreen> {
             ),
           ),
         ],
-
         if (customerNote.isNotEmpty) ...[
           const SizedBox(height: 10),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
@@ -613,10 +610,44 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
+  void _goToCustomerInformation() {
+    if (itemsToOrder.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.dark,
+          content: Text(
+            'Tidak ada produk yang dapat dipesan.',
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CustomerInformationScreen(
+          orderType: selectedOrderType,
+          totalPayment: totalPayment,
+          orderItems: itemsToOrder,
+
+          // Penanda transaksi dari keranjang.
+          isCartCheckout: isCartCheckout,
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottomButton() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      padding: const EdgeInsets.fromLTRB(
+        20, 12, 20, 12,
+      ),
       decoration: const BoxDecoration(
         color: Colors.white,
         border: Border(
@@ -630,18 +661,7 @@ class _OrderScreenState extends State<OrderScreen> {
         child: SizedBox(
           height: 50,
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      CustomerInformationScreen(
-                    orderType: selectedOrderType,
-                    totalPayment: totalPayment,
-                  ),
-                ),
-              );
-            },
+            onPressed: _goToCustomerInformation,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.dark,
               foregroundColor: Colors.white,

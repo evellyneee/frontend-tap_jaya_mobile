@@ -149,8 +149,7 @@ class InfoCafeScreen extends StatelessWidget {
                         const SizedBox(height: 18),
 
                         _buildButton(
-                          label:
-                              'Beri rating & ulasan di Google Maps',
+                          label: 'Beri rating & ulasan di Google Maps',
                           dark: false,
                           onPressed: () {
                             _showMessage(
@@ -179,19 +178,6 @@ class InfoCafeScreen extends StatelessWidget {
                           Icons.email_outlined,
                           'Email: support@tapjaya.com',
                         ),
-
-                        const SizedBox(height: 18),
-
-                        _buildButton(
-                          label: 'Chat dengan AI Assistant',
-                          dark: true,
-                          onPressed: () {
-                            _showMessage(
-                              context,
-                              'AI Assistant belum dihubungkan.',
-                            );
-                          },
-                        ),
                       ],
                     ),
 
@@ -203,8 +189,7 @@ class InfoCafeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar:
-          _buildBottomNavigation(context),
+      bottomNavigationBar: _buildBottomNavigation(context),
     );
   }
 
