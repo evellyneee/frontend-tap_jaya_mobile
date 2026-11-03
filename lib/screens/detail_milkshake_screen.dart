@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,36 +10,30 @@ class DetailMilkshakeScreen extends StatefulWidget {
   const DetailMilkshakeScreen({super.key});
 
   @override
-  State<DetailMilkshakeScreen> createState() =>
-      _DetailMilkshakeScreenState();
+  State<DetailMilkshakeScreen> createState() => _DetailMilkshakeScreenState();
 }
 
-class _DetailMilkshakeScreenState
-    extends State<DetailMilkshakeScreen> {
+class _DetailMilkshakeScreenState extends State<DetailMilkshakeScreen> {
   bool lessSugar = false;
   bool lessIce = false;
   int quantity = 1;
 
-  final TextEditingController noteController =
-      TextEditingController();
+  final TextEditingController noteController = TextEditingController();
 
   static const int unitPrice = 24545;
 
   int get totalPrice => unitPrice * quantity;
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}';
+    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
   }
 
   String get cartItemId => [
-        'milkshake-sweet-mango',
-        lessSugar ? 'less-sugar' : 'normal-sugar',
-        lessIce ? 'less-ice' : 'normal-ice',
-        noteController.text.trim(),
-      ].join('|');
+    'milkshake-sweet-mango',
+    lessSugar ? 'less-sugar' : 'normal-sugar',
+    lessIce ? 'less-ice' : 'normal-ice',
+    noteController.text.trim(),
+  ].join('|');
 
   CartItem createOrderItem() {
     return CartItem(
@@ -66,10 +59,7 @@ class _DetailMilkshakeScreenState
         duration: const Duration(seconds: 2),
         content: Text(
           '$quantity item berhasil ditambahkan ke keranjang',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 12,
-          ),
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
         ),
       ),
     );
@@ -81,10 +71,8 @@ class _DetailMilkshakeScreenState
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OrderScreen(
-          subtotal: totalPrice,
-          orderItems: [item],
-        ),
+        builder: (context) =>
+            OrderScreen(subtotal: totalPrice, orderItems: [item]),
       ),
     );
   }
@@ -189,9 +177,7 @@ class _DetailMilkshakeScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE5E0DB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E0DB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,16 +228,11 @@ class _DetailMilkshakeScreenState
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: const Color(0xFFE5E0DB),
-            ),
+            border: Border.all(color: const Color(0xFFE5E0DB)),
           ),
           child: Column(
             children: [
@@ -295,9 +276,7 @@ class _DetailMilkshakeScreenState
         child: Row(
           children: [
             Icon(
-              value
-                  ? Icons.check_box
-                  : Icons.check_box_outline_blank,
+              value ? Icons.check_box : Icons.check_box_outline_blank,
               size: 20,
               color: AppColors.dark,
             ),
@@ -305,18 +284,12 @@ class _DetailMilkshakeScreenState
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: AppColors.dark,
-                ),
+                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
               ),
             ),
             Text(
               price,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                color: AppColors.dark,
-              ),
+              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
             ),
           ],
         ),
@@ -340,17 +313,10 @@ class _DetailMilkshakeScreenState
         TextField(
           controller: noteController,
           maxLines: 3,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            color: AppColors.dark,
-          ),
+          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
           decoration: InputDecoration(
-            hintText:
-                'Tambah catatan pesanan (misal: jangan terlalu manis)...',
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 10,
-              color: AppColors.grey,
-            ),
+            hintText: 'Tambah catatan pesanan (misal: jangan terlalu manis)...',
+            hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
@@ -359,21 +325,15 @@ class _DetailMilkshakeScreenState
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE5E0DB),
-              ),
+              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE5E0DB),
-              ),
+              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: AppColors.dark,
-              ),
+              borderSide: const BorderSide(color: AppColors.dark),
             ),
           ),
         ),
@@ -401,9 +361,7 @@ class _DetailMilkshakeScreenState
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: const Color(0xFFD8D3CE),
-            ),
+            border: Border.all(color: const Color(0xFFD8D3CE)),
           ),
           child: Row(
             children: [
@@ -415,10 +373,7 @@ class _DetailMilkshakeScreenState
                     });
                   }
                 },
-                child: const Icon(
-                  Icons.remove_circle_outline,
-                  size: 21,
-                ),
+                child: const Icon(Icons.remove_circle_outline, size: 21),
               ),
               const SizedBox(width: 7),
               Text(
@@ -435,10 +390,7 @@ class _DetailMilkshakeScreenState
                     quantity++;
                   });
                 },
-                child: const Icon(
-                  Icons.add_circle_outline,
-                  size: 21,
-                ),
+                child: const Icon(Icons.add_circle_outline, size: 21),
               ),
             ],
           ),
@@ -452,9 +404,7 @@ class _DetailMilkshakeScreenState
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
               backgroundColor: Colors.white,
-              side: const BorderSide(
-                color: Color(0xFFD8D3CE),
-              ),
+              side: const BorderSide(color: Color(0xFFD8D3CE)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(9),
               ),
@@ -462,11 +412,7 @@ class _DetailMilkshakeScreenState
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.add,
-                  size: 23,
-                  color: AppColors.dark,
-                ),
+                Icon(Icons.add, size: 23, color: AppColors.dark),
                 SizedBox(width: 3),
                 Icon(
                   Icons.shopping_cart_outlined,
@@ -487,9 +433,7 @@ class _DetailMilkshakeScreenState
                 backgroundColor: AppColors.dark,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9),
                 ),

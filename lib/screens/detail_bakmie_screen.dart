@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -10,36 +9,26 @@ import 'order_screen.dart';
 class DetailBakmieScreen extends StatefulWidget {
   final ValueChanged<int>? onAddToCart;
 
-  const DetailBakmieScreen({
-    super.key,
-    this.onAddToCart,
-  });
+  const DetailBakmieScreen({super.key, this.onAddToCart});
 
   @override
-  State<DetailBakmieScreen> createState() =>
-      _DetailBakmieScreenState();
+  State<DetailBakmieScreen> createState() => _DetailBakmieScreenState();
 }
 
 class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
   int quantity = 1;
-  final TextEditingController noteController =
-      TextEditingController();
+  final TextEditingController noteController = TextEditingController();
 
   final int unitPrice = 28182;
 
   int get totalPrice => unitPrice * quantity;
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}';
+    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
   }
 
-  String get cartItemId => [
-        'bakmie-jaya',
-        noteController.text.trim(),
-      ].join('|');
+  String get cartItemId =>
+      ['bakmie-jaya', noteController.text.trim()].join('|');
 
   CartItem createOrderItem() {
     return CartItem(
@@ -66,10 +55,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
         duration: const Duration(seconds: 2),
         content: Text(
           '$quantity item berhasil ditambahkan ke keranjang',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 12,
-          ),
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
         ),
       ),
     );
@@ -81,10 +67,8 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OrderScreen(
-          subtotal: totalPrice,
-          orderItems: [item],
-        ),
+        builder: (context) =>
+            OrderScreen(subtotal: totalPrice, orderItems: [item]),
       ),
     );
   }
@@ -187,9 +171,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE5E0DB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E0DB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,17 +223,11 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
         TextField(
           controller: noteController,
           maxLines: 3,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            color: AppColors.dark,
-          ),
+          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
           decoration: InputDecoration(
             hintText:
                 'Tambah catatan pesanan (misal: tidak pedas, pedas level 2)...',
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 10,
-              color: AppColors.grey,
-            ),
+            hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
@@ -260,21 +236,15 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE5E0DB),
-              ),
+              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE5E0DB),
-              ),
+              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: AppColors.dark,
-              ),
+              borderSide: const BorderSide(color: AppColors.dark),
             ),
           ),
         ),
@@ -302,9 +272,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: const Color(0xFFD8D3CE),
-            ),
+            border: Border.all(color: const Color(0xFFD8D3CE)),
           ),
           child: Row(
             children: [
@@ -316,10 +284,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
                     });
                   }
                 },
-                child: const Icon(
-                  Icons.remove_circle_outline,
-                  size: 21,
-                ),
+                child: const Icon(Icons.remove_circle_outline, size: 21),
               ),
               const SizedBox(width: 7),
               Text(
@@ -336,10 +301,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
                     quantity++;
                   });
                 },
-                child: const Icon(
-                  Icons.add_circle_outline,
-                  size: 21,
-                ),
+                child: const Icon(Icons.add_circle_outline, size: 21),
               ),
             ],
           ),
@@ -353,9 +315,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
               backgroundColor: Colors.white,
-              side: const BorderSide(
-                color: Color(0xFFD8D3CE),
-              ),
+              side: const BorderSide(color: Color(0xFFD8D3CE)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(9),
               ),
@@ -363,11 +323,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.add,
-                  size: 23,
-                  color: AppColors.dark,
-                ),
+                Icon(Icons.add, size: 23, color: AppColors.dark),
                 SizedBox(width: 3),
                 Icon(
                   Icons.shopping_cart_outlined,
@@ -388,9 +344,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
                 backgroundColor: AppColors.dark,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9),
                 ),

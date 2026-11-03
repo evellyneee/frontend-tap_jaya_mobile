@@ -11,9 +11,7 @@ class SplashScreen extends StatelessWidget {
   void goToNextPage(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
   }
 
@@ -53,9 +51,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const AppLogo(
-                    width: 120,
-                  ),
+                  child: const AppLogo(width: 120),
                 ),
 
                 const SizedBox(height: 28),

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -14,11 +13,7 @@ class OrderScreen extends StatefulWidget {
   // Jika berisi produk, alurnya Beli Sekarang.
   final List<CartItem>? orderItems;
 
-  const OrderScreen({
-    super.key,
-    required this.subtotal,
-    this.orderItems,
-  });
+  const OrderScreen({super.key, required this.subtotal, this.orderItems});
 
   @override
   State<OrderScreen> createState() => _OrderScreenState();
@@ -38,10 +33,9 @@ class _OrderScreenState extends State<OrderScreen> {
     // cara pemanggilan OrderScreen yang sudah ada.
     isCartCheckout = widget.orderItems == null;
 
-    final sourceItems = widget.orderItems ??
-        CartStore.instance.items
-            .where((item) => item.isSelected)
-            .toList();
+    final sourceItems =
+        widget.orderItems ??
+        CartStore.instance.items.where((item) => item.isSelected).toList();
 
     // Snapshot supaya jumlah dan konfigurasi
     // pesanan tidak berubah selama checkout.
@@ -63,18 +57,14 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}';
+    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
   }
 
   int get tax => (widget.subtotal * 0.10).round();
 
   int get serviceFee => 2000;
 
-  int get totalPayment =>
-      widget.subtotal + tax + serviceFee;
+  int get totalPayment => widget.subtotal + tax + serviceFee;
 
   List<String> getItemDetails(CartItem item) {
     final List<String> details = [];
@@ -126,9 +116,7 @@ class _OrderScreenState extends State<OrderScreen> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  20, 12, 20, 24,
-                ),
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -183,10 +171,7 @@ class _OrderScreenState extends State<OrderScreen> {
             alignment: Alignment.centerLeft,
             child: IconButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(
-                Icons.arrow_back,
-                color: AppColors.dark,
-              ),
+              icon: const Icon(Icons.arrow_back, color: AppColors.dark),
             ),
           ),
           Text(
@@ -240,14 +225,9 @@ class _OrderScreenState extends State<OrderScreen> {
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 6,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
           decoration: BoxDecoration(
-            color: active
-                ? AppColors.dark
-                : Colors.transparent,
+            color: active ? AppColors.dark : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
           ),
           child: Row(
@@ -256,9 +236,7 @@ class _OrderScreenState extends State<OrderScreen> {
               Icon(
                 icon,
                 size: 17,
-                color: active
-                    ? Colors.white
-                    : AppColors.dark,
+                color: active ? Colors.white : AppColors.dark,
               ),
               const SizedBox(width: 6),
               Flexible(
@@ -268,9 +246,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: active
-                        ? Colors.white
-                        : AppColors.dark,
+                    color: active ? Colors.white : AppColors.dark,
                   ),
                 ),
               ),
@@ -282,8 +258,7 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderTypeInformation() {
-    final bool dineIn =
-        selectedOrderType == 'Makan di Tempat';
+    final bool dineIn = selectedOrderType == 'Makan di Tempat';
 
     return Container(
       width: double.infinity,
@@ -291,9 +266,7 @@ class _OrderScreenState extends State<OrderScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE2DED9),
-        ),
+        border: Border.all(color: const Color(0xFFE2DED9)),
       ),
       child: Row(
         children: [
@@ -305,9 +278,7 @@ class _OrderScreenState extends State<OrderScreen> {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
-              dineIn
-                  ? Icons.restaurant_outlined
-                  : Icons.shopping_bag_outlined,
+              dineIn ? Icons.restaurant_outlined : Icons.shopping_bag_outlined,
               color: AppColors.red,
             ),
           ),
@@ -338,11 +309,7 @@ class _OrderScreenState extends State<OrderScreen> {
               ],
             ),
           ),
-          const Icon(
-            Icons.check_circle,
-            color: AppColors.red,
-            size: 22,
-          ),
+          const Icon(Icons.check_circle, color: AppColors.red, size: 22),
         ],
       ),
     );
@@ -355,30 +322,20 @@ class _OrderScreenState extends State<OrderScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE2DED9),
-        ),
+        border: Border.all(color: const Color(0xFFE2DED9)),
       ),
       child: itemsToOrder.isEmpty
           ? Text(
               'Rincian menu tidak tersedia.',
-              style: GoogleFonts.poppins(
-                fontSize: 11,
-                color: AppColors.grey,
-              ),
+              style: GoogleFonts.poppins(fontSize: 11, color: AppColors.grey),
             )
           : Column(
               children: [
                 for (int i = 0; i < itemsToOrder.length; i++) ...[
                   if (i > 0)
                     const Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 14,
-                      ),
-                      child: Divider(
-                        height: 1,
-                        color: Color(0xFFE2DED9),
-                      ),
+                      padding: EdgeInsets.symmetric(vertical: 14),
+                      child: Divider(height: 1, color: Color(0xFFE2DED9)),
                     ),
                   _buildOrderItem(itemsToOrder[i]),
                 ],
@@ -429,9 +386,7 @@ class _OrderScreenState extends State<OrderScreen> {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    formatPrice(
-                      item.quantity * item.unitPrice,
-                    ),
+                    formatPrice(item.quantity * item.unitPrice),
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -507,9 +462,7 @@ class _OrderScreenState extends State<OrderScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE2DED9),
-        ),
+        border: Border.all(color: const Color(0xFFE2DED9)),
       ),
       child: Column(
         children: [
@@ -518,10 +471,7 @@ class _OrderScreenState extends State<OrderScreen> {
             value: formatPrice(widget.subtotal),
           ),
           const SizedBox(height: 14),
-          _buildPaymentRow(
-            title: 'PPN (10%)',
-            value: formatPrice(tax),
-          ),
+          _buildPaymentRow(title: 'PPN (10%)', value: formatPrice(tax)),
           const SizedBox(height: 14),
           _buildPaymentRow(
             title: 'Biaya Layanan',
@@ -529,10 +479,7 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 15),
-            child: Divider(
-              height: 1,
-              color: Color(0xFFE2DED9),
-            ),
+            child: Divider(height: 1, color: Color(0xFFE2DED9)),
           ),
           _buildPaymentRow(
             title: 'Total Pembayaran',
@@ -556,9 +503,7 @@ class _OrderScreenState extends State<OrderScreen> {
           title,
           style: GoogleFonts.poppins(
             fontSize: bold ? 12 : 11,
-            fontWeight: bold
-                ? FontWeight.w600
-                : FontWeight.w400,
+            fontWeight: bold ? FontWeight.w600 : FontWeight.w400,
             color: AppColors.dark,
           ),
         ),
@@ -566,9 +511,7 @@ class _OrderScreenState extends State<OrderScreen> {
           value,
           style: GoogleFonts.poppins(
             fontSize: bold ? 13 : 11,
-            fontWeight: bold
-                ? FontWeight.w700
-                : FontWeight.w500,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
             color: AppColors.dark,
           ),
         ),
@@ -587,11 +530,7 @@ class _OrderScreenState extends State<OrderScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.info_outline,
-            color: AppColors.red,
-            size: 21,
-          ),
+          const Icon(Icons.info_outline, color: AppColors.red, size: 21),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -617,10 +556,7 @@ class _OrderScreenState extends State<OrderScreen> {
           backgroundColor: AppColors.dark,
           content: Text(
             'Tidak ada produk yang dapat dipesan.',
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: Colors.white,
-            ),
+            style: GoogleFonts.poppins(fontSize: 11, color: Colors.white),
           ),
         ),
       );
@@ -645,16 +581,10 @@ class _OrderScreenState extends State<OrderScreen> {
   Widget _buildBottomButton() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        20, 12, 20, 12,
-      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: Color(0xFFE7E3DF),
-          ),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFE7E3DF))),
       ),
       child: SafeArea(
         top: false,

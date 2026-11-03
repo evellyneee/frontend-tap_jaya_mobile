@@ -31,9 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (formKey.currentState!.validate()) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     }
   }
@@ -44,10 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: AppColors.warmWhite,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 28,
-            vertical: 28,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 28),
           child: Form(
             key: formKey,
             child: Column(
@@ -59,17 +54,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: AppColors.dark,
-                  ),
+                  icon: const Icon(Icons.arrow_back, color: AppColors.dark),
                 ),
                 const SizedBox(height: 35),
-                const Center(
-                  child: AppLogo(
-                    width: 145,
-                  ),
-                ),
+                const Center(child: AppLogo(width: 145)),
                 const SizedBox(height: 48),
                 Text(
                   'Masuk',
@@ -84,9 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   'Masuk untuk melanjutkan pemesanan.',
                   style: GoogleFonts.poppins(
                     fontSize: 13,
-                    color: AppColors.dark.withValues(
-                      alpha: 0.6,
-                    ),
+                    color: AppColors.dark.withValues(alpha: 0.6),
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -104,9 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     hintText: 'Masukkan email',
-                    prefixIcon: Icon(
-                      Icons.email_outlined,
-                    ),
+                    prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
@@ -135,9 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: obscurePassword,
                   decoration: InputDecoration(
                     hintText: 'Masukkan password',
-                    prefixIcon: const Icon(
-                      Icons.lock_outline,
-                    ),
+                    prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       onPressed: () {
                         setState(() {
