@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 
 import '../models/cart_item.dart';
@@ -6,12 +5,7 @@ import '../models/cart_item.dart';
 // Tahapan proses pesanan.
 // completed = selesai dibuat dan siap diambil.
 // pickedUp = sudah diambil customer, masuk riwayat.
-enum OrderProgress {
-  received,
-  processing,
-  completed,
-  pickedUp,
-}
+enum OrderProgress { received, processing, completed, pickedUp }
 
 class SessionOrderItem {
   final String productName;
@@ -83,49 +77,35 @@ class SessionOrder {
 
   // Selesai dibuat oleh barista.
   bool get isCompleted =>
-      progress == OrderProgress.completed ||
-      progress == OrderProgress.pickedUp;
+      progress == OrderProgress.completed || progress == OrderProgress.pickedUp;
 
   // Benar-benar sudah diambil customer.
-  bool get isPickedUp =>
-      progress == OrderProgress.pickedUp;
+  bool get isPickedUp => progress == OrderProgress.pickedUp;
 
   // Tetap aktif selama belum diambil.
   bool get isActive => !isPickedUp;
 
   int get totalQuantity {
-    return items.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
+    return items.fold<int>(0, (sum, item) => sum + item.quantity);
   }
 }
 
 class OrderSessionStore extends ChangeNotifier {
   OrderSessionStore._();
 
-  static final OrderSessionStore instance =
-      OrderSessionStore._();
+  static final OrderSessionStore instance = OrderSessionStore._();
 
   final List<SessionOrder> _orders = [];
 
   // Semua pesanan yang belum diambil customer.
   // Termasuk pesanan yang sudah selesai dibuat.
   List<SessionOrder> get activeOrders {
-    return List.unmodifiable(
-      _orders.where(
-        (order) => order.isActive,
-      ),
-    );
+    return List.unmodifiable(_orders.where((order) => order.isActive));
   }
 
   // Hanya pesanan yang telah diambil customer.
   List<SessionOrder> get historyOrders {
-    return List.unmodifiable(
-      _orders.where(
-        (order) => order.isPickedUp,
-      ),
-    );
+    return List.unmodifiable(_orders.where((order) => order.isPickedUp));
   }
 
   List<SessionOrder> get allOrders {
@@ -135,9 +115,7 @@ class OrderSessionStore extends ChangeNotifier {
   bool get isEmpty => _orders.isEmpty;
 
   bool hasOrder(String id) {
-    return _orders.any(
-      (order) => order.id == id,
-    );
+    return _orders.any((order) => order.id == id);
   }
 
   SessionOrder? findOrder(String id) {

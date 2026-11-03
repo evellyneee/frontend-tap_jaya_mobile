@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'detail_official_screen.dart';
+import '../models/official_menu_catalog.dart';
+
 import '../core/constants/app_colors.dart';
 import '../models/cart_item.dart';
 import '../services/cart_store.dart';
@@ -44,6 +47,19 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> _editItem(CartItem item) async {
+    if (item.id.startsWith('official|')) {
+      final menu = OfficialMenuCatalog.byName(item.productName);
+      if (menu != null) {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) =>
+                DetailOfficialScreen(menu: menu, editingItem: item),
+          ),
+        );
+        return;
+      }
+    }
     await Navigator.push(
       context,
       MaterialPageRoute(

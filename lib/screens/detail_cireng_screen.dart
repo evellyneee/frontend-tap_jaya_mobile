@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,8 +10,7 @@ class DetailCirengScreen extends StatefulWidget {
   const DetailCirengScreen({super.key});
 
   @override
-  State<DetailCirengScreen> createState() =>
-      _DetailCirengScreenState();
+  State<DetailCirengScreen> createState() => _DetailCirengScreenState();
 }
 
 class _DetailCirengScreenState extends State<DetailCirengScreen> {
@@ -22,26 +20,21 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
   bool extraSambal = false;
   int quantity = 1;
 
-  final TextEditingController noteController =
-      TextEditingController();
+  final TextEditingController noteController = TextEditingController();
 
-  int get unitPrice =>
-      basePrice + (extraSambal ? extraSambalPrice : 0);
+  int get unitPrice => basePrice + (extraSambal ? extraSambalPrice : 0);
 
   int get totalPrice => unitPrice * quantity;
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}';
+    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
   }
 
   String get cartItemId => [
-        'cireng',
-        extraSambal ? 'extra-sambal' : 'normal-sambal',
-        noteController.text.trim(),
-      ].join('|');
+    'cireng',
+    extraSambal ? 'extra-sambal' : 'normal-sambal',
+    noteController.text.trim(),
+  ].join('|');
 
   CartItem createOrderItem() {
     final String customerNote = noteController.text.trim();
@@ -74,10 +67,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
         duration: const Duration(seconds: 2),
         content: Text(
           '$quantity item berhasil ditambahkan ke keranjang',
-          style: GoogleFonts.poppins(
-            color: Colors.white,
-            fontSize: 12,
-          ),
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
         ),
       ),
     );
@@ -89,10 +79,8 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OrderScreen(
-          subtotal: totalPrice,
-          orderItems: [item],
-        ),
+        builder: (context) =>
+            OrderScreen(subtotal: totalPrice, orderItems: [item]),
       ),
     );
   }
@@ -197,9 +185,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE5E0DB),
-        ),
+        border: Border.all(color: const Color(0xFFE5E0DB)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,16 +236,11 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: const Color(0xFFE5E0DB),
-            ),
+            border: Border.all(color: const Color(0xFFE5E0DB)),
           ),
           child: InkWell(
             onTap: () {
@@ -320,17 +301,10 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
         TextField(
           controller: noteController,
           maxLines: 3,
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            color: AppColors.dark,
-          ),
+          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
           decoration: InputDecoration(
-            hintText:
-                'Tambah catatan pesanan (misal: sambal dipisah, tidak terlalu pedas)...',
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 10,
-              color: AppColors.grey,
-            ),
+            hintText: 'Tambah catatan pesanan (misal: sambal dipisah, tidak terlalu pedas)...',
+            hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(
@@ -339,21 +313,15 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
             ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE5E0DB),
-              ),
+              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: Color(0xFFE5E0DB),
-              ),
+              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: AppColors.dark,
-              ),
+              borderSide: const BorderSide(color: AppColors.dark),
             ),
           ),
         ),
@@ -381,9 +349,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(
-              color: const Color(0xFFD8D3CE),
-            ),
+            border: Border.all(color: const Color(0xFFD8D3CE)),
           ),
           child: Row(
             children: [
@@ -395,10 +361,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
                     });
                   }
                 },
-                child: const Icon(
-                  Icons.remove_circle_outline,
-                  size: 21,
-                ),
+                child: const Icon(Icons.remove_circle_outline, size: 21),
               ),
               const SizedBox(width: 7),
               Text(
@@ -415,10 +378,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
                     quantity++;
                   });
                 },
-                child: const Icon(
-                  Icons.add_circle_outline,
-                  size: 21,
-                ),
+                child: const Icon(Icons.add_circle_outline, size: 21),
               ),
             ],
           ),
@@ -432,9 +392,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
               backgroundColor: Colors.white,
-              side: const BorderSide(
-                color: Color(0xFFD8D3CE),
-              ),
+              side: const BorderSide(color: Color(0xFFD8D3CE)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(9),
               ),
@@ -442,11 +400,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.add,
-                  size: 23,
-                  color: AppColors.dark,
-                ),
+                Icon(Icons.add, size: 23, color: AppColors.dark),
                 SizedBox(width: 3),
                 Icon(
                   Icons.shopping_cart_outlined,
@@ -467,9 +421,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
                 backgroundColor: AppColors.dark,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(9),
                 ),

@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 
 import '../models/cart_item.dart';
@@ -18,37 +17,26 @@ class CartStore extends ChangeNotifier {
 
   // Total jumlah seluruh produk di keranjang.
   int get totalQuantity {
-    return _items.fold<int>(
-      0,
-      (total, item) => total + item.quantity,
-    );
+    return _items.fold<int>(0, (total, item) => total + item.quantity);
   }
 
   // Total jumlah produk yang dipilih.
   int get selectedQuantity {
     return _items
         .where((item) => item.isSelected)
-        .fold<int>(
-          0,
-          (total, item) => total + item.quantity,
-        );
+        .fold<int>(0, (total, item) => total + item.quantity);
   }
 
   // Total harga produk yang dipilih.
   int get selectedTotal {
     return _items
         .where((item) => item.isSelected)
-        .fold<int>(
-          0,
-          (total, item) => total + item.totalPrice,
-        );
+        .fold<int>(0, (total, item) => total + item.totalPrice);
   }
 
   // Daftar produk yang dipilih.
   List<CartItem> get selectedItems {
-    return List.unmodifiable(
-      _items.where((item) => item.isSelected),
-    );
+    return List.unmodifiable(_items.where((item) => item.isSelected));
   }
 
   bool get allSelected {
@@ -56,15 +44,11 @@ class CartStore extends ChangeNotifier {
       return false;
     }
 
-    return _items.every(
-      (item) => item.isSelected,
-    );
+    return _items.every((item) => item.isSelected);
   }
 
   bool get hasSelectedItems {
-    return _items.any(
-      (item) => item.isSelected,
-    );
+    return _items.any((item) => item.isSelected);
   }
 
   // Menambahkan produk ke keranjang.
@@ -91,9 +75,7 @@ class CartStore extends ChangeNotifier {
 
   // Mengubah jumlah produk dalam keranjang.
   void updateQuantity(String id, int quantity) {
-    final int index = _items.indexWhere(
-      (item) => item.id == id,
-    );
+    final int index = _items.indexWhere((item) => item.id == id);
 
     if (index == -1) {
       return;
@@ -109,20 +91,14 @@ class CartStore extends ChangeNotifier {
   }
 
   // Memperbarui konfigurasi produk.
-  void updateItem({
-    required String currentId,
-    required CartItem updatedItem,
-  }) {
-    final int currentIndex = _items.indexWhere(
-      (item) => item.id == currentId,
-    );
+  void updateItem({required String currentId, required CartItem updatedItem}) {
+    final int currentIndex = _items.indexWhere((item) => item.id == currentId);
 
     if (currentIndex == -1) {
       return;
     }
 
-    final bool previousSelection =
-        _items[currentIndex].isSelected;
+    final bool previousSelection = _items[currentIndex].isSelected;
 
     _items.removeAt(currentIndex);
 
@@ -132,20 +108,16 @@ class CartStore extends ChangeNotifier {
 
     if (updatedItem.quantity > 0) {
       if (sameConfigurationIndex >= 0) {
-        final existingItem =
-            _items[sameConfigurationIndex];
+        final existingItem = _items[sameConfigurationIndex];
 
         existingItem.quantity += updatedItem.quantity;
 
-        existingItem.isSelected =
-            existingItem.isSelected || previousSelection;
+        existingItem.isSelected = existingItem.isSelected || previousSelection;
       } else {
         updatedItem.isSelected = previousSelection;
 
         _items.insert(
-          currentIndex <= _items.length
-              ? currentIndex
-              : _items.length,
+          currentIndex <= _items.length ? currentIndex : _items.length,
           updatedItem,
         );
       }
@@ -156,9 +128,7 @@ class CartStore extends ChangeNotifier {
 
   // Memilih atau membatalkan pilihan produk.
   void toggleItem(String id, bool selected) {
-    final int index = _items.indexWhere(
-      (item) => item.id == id,
-    );
+    final int index = _items.indexWhere((item) => item.id == id);
 
     if (index == -1) {
       return;
@@ -186,9 +156,7 @@ class CartStore extends ChangeNotifier {
   void removeItem(String id) {
     final int previousLength = _items.length;
 
-    _items.removeWhere(
-      (item) => item.id == id,
-    );
+    _items.removeWhere((item) => item.id == id);
 
     if (_items.length != previousLength) {
       notifyListeners();
@@ -219,9 +187,7 @@ class CartStore extends ChangeNotifier {
   // sedang berjalan, hanya kuantitas transaksi
   // yang dikurangi.
 
-  void removePurchasedItems(
-    List<CartItem> purchasedItems,
-  ) {
+  void removePurchasedItems(List<CartItem> purchasedItems) {
     if (purchasedItems.isEmpty || _items.isEmpty) {
       return;
     }

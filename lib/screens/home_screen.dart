@@ -1,16 +1,15 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import 'detail_official_screen.dart';
+import 'menu_recommendation_screen.dart';
+import '../models/official_menu_catalog.dart';
 
 import '../core/constants/app_colors.dart';
 import '../services/cart_store.dart';
 import '../widgets/app_logo.dart';
 
 import 'cart_screen.dart';
-import 'detail_bakmie_screen.dart';
-import 'detail_cireng_screen.dart';
-import 'detail_milkshake_screen.dart';
-import 'detail_product_screen.dart';
 import 'info_cafe_screen.dart';
 import 'status_screen.dart';
 
@@ -25,48 +24,14 @@ class _HomeScreenState extends State<HomeScreen> {
   String selectedCategory = 'Semua';
   String searchText = '';
 
-  final TextEditingController searchController =
-      TextEditingController();
+  final TextEditingController searchController = TextEditingController();
 
   final CartStore cartStore = CartStore.instance;
 
-  final List<String> categories = [
-    'Semua',
-    'Kopi',
-    'Non Kopi',
-    'Makanan',
-  ];
+  final List<String> categories = OfficialMenuCatalog.categories;
 
-  final List<Map<String, String>> products = [
-    {
-      'name': 'Bakmie Jaya',
-      'description': 'Mie kenyal dengan topping ayam gurih',
-      'price': 'Rp 28.182',
-      'category': 'Makanan',
-      'image': 'assets/images/bakmie_jaya.png',
-    },
-    {
-      'name': 'Kopi Susu Berjaya di Bali',
-      'description': 'Perpaduan espresso dan susu creamy',
-      'price': 'Mulai Rp 24.545',
-      'category': 'Kopi',
-      'image': 'assets/images/kopi_susu_bali.png',
-    },
-    {
-      'name': 'Milkshake Sweet Mango',
-      'description': 'Perpaduan susu mangga segar',
-      'price': 'Rp 24.545',
-      'category': 'Non Kopi',
-      'image': 'assets/images/milkshake_sweet_mango.png',
-    },
-    {
-      'name': 'Cireng',
-      'description': 'Aci digoreng garing dengan cocolan sambal',
-      'price': 'Rp 15.455',
-      'category': 'Makanan',
-      'image': 'assets/images/cireng.png',
-    },
-  ];
+  final List<Map<String, String>> products =
+      OfficialMenuCatalog.referenceProducts;
 
   @override
   void initState() {
@@ -90,11 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Route tanpa animasi khusus navigasi bawah.
   Route<void> _noAnimationRoute(Widget page) {
     return PageRouteBuilder<void>(
-      pageBuilder: (
-        context,
-        animation,
-        secondaryAnimation,
-      ) {
+      pageBuilder: (context, animation, secondaryAnimation) {
         return page;
       },
       transitionDuration: Duration.zero,
@@ -103,74 +64,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openStatus() {
-    Navigator.push(
-      context,
-      _noAnimationRoute(const StatusScreen()),
-    );
+    Navigator.push(context, _noAnimationRoute(const StatusScreen()));
   }
 
   void _openInfoCafe() {
-    Navigator.push(
-      context,
-      _noAnimationRoute(const InfoCafeScreen()),
-    );
+    Navigator.push(context, _noAnimationRoute(const InfoCafeScreen()));
   }
 
   List<Map<String, String>> get filteredProducts {
+    final query = searchText.trim().toLowerCase();
     return products.where((product) {
-      final bool matchesCategory =
+      final matchesCategory =
           selectedCategory == 'Semua' ||
           product['category'] == selectedCategory;
-
-      final String query = searchText.toLowerCase();
-
-      final bool matchesSearch =
-          product['name']!.toLowerCase().contains(query) ||
-          product['description']!.toLowerCase().contains(query);
-
+      final matchesSearch =
+          query.isEmpty ||
+          (product['name'] ?? '').toLowerCase().contains(query) ||
+          (product['description'] ?? '').toLowerCase().contains(query);
       return matchesCategory && matchesSearch;
     }).toList();
   }
 
-  void _openProductDetail(
-    Map<String, String> product,
-  ) {
-    final String? name = product['name'];
-
-    // Navigasi Detail Menu tetap seperti sebelumnya.
-    if (name == 'Kopi Susu Berjaya di Bali') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DetailProductScreen(),
-        ),
-      );
-    } else if (name == 'Bakmie Jaya') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DetailBakmieScreen(),
-        ),
-      );
-    } else if (name == 'Milkshake Sweet Mango') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DetailMilkshakeScreen(),
-        ),
-      );
-    } else if (name == 'Cireng') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const DetailCirengScreen(),
-        ),
-      );
-    }
+  void _openProductDetail(Map<String, String> product) {
+    final menu = OfficialMenuCatalog.byName(product['name'] ?? '');
+    if (menu == null) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DetailOfficialScreen(menu: menu)),
+    );
   }
 
   @override
@@ -184,17 +105,13 @@ class _HomeScreenState extends State<HomeScreen> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  18,
-                  14,
-                  18,
-                  18,
-                ),
+                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
                 child: Column(
                   children: [
                     _buildSearch(),
                     const SizedBox(height: 12),
                     _buildCategories(),
+                    _buildRecommendationBanner(),
                     const SizedBox(height: 18),
                     if (filteredProducts.isEmpty)
                       Padding(
@@ -209,17 +126,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       )
                     else
                       ListView.separated(
-                        physics:
-                            const NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemCount: filteredProducts.length,
                         separatorBuilder: (context, index) {
                           return const SizedBox(height: 14);
                         },
                         itemBuilder: (context, index) {
-                          return _buildProductCard(
-                            filteredProducts[index],
-                          );
+                          return _buildProductCard(filteredProducts[index]);
                         },
                       ),
                   ],
@@ -239,12 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       width: double.infinity,
       color: AppColors.dark,
-      padding: const EdgeInsets.fromLTRB(
-        18,
-        15,
-        18,
-        15,
-      ),
+      padding: const EdgeInsets.fromLTRB(18, 15, 18, 15),
       child: Row(
         children: [
           Container(
@@ -289,9 +198,7 @@ class _HomeScreenState extends State<HomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const CartScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const CartScreen()),
               );
             },
             child: Stack(
@@ -312,9 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         minWidth: 18,
                         minHeight: 18,
                       ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
                       alignment: Alignment.center,
                       decoration: const BoxDecoration(
                         color: AppColors.red,
@@ -348,10 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
             searchText = value;
           });
         },
-        style: GoogleFonts.poppins(
-          fontSize: 12,
-          color: AppColors.dark,
-        ),
+        style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
         decoration: InputDecoration(
           hintText: 'Cari menu...',
           hintStyle: GoogleFonts.poppins(
@@ -366,22 +268,15 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(
-              color: Color(0xFFE6E3DF),
-            ),
+            borderSide: const BorderSide(color: Color(0xFFE6E3DF)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(
-              color: Color(0xFFE6E3DF),
-            ),
+            borderSide: const BorderSide(color: Color(0xFFE6E3DF)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(25),
-            borderSide: const BorderSide(
-              color: AppColors.dark,
-              width: 1,
-            ),
+            borderSide: const BorderSide(color: AppColors.dark, width: 1),
           ),
         ),
       ),
@@ -389,48 +284,92 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategories() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: categories.map((category) {
-        final bool active =
-            selectedCategory == category;
-
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              selectedCategory = category;
-            });
-          },
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 15,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: active
-                  ? AppColors.dark
-                  : const Color(0xFFF5EDE5),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              category,
-              style: GoogleFonts.poppins(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                color: active
-                    ? Colors.white
-                    : AppColors.dark,
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: categories.map((category) {
+          final active = selectedCategory == category;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => setState(() => selectedCategory = category),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 13,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: active ? AppColors.dark : const Color(0xFFF5EDE5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  category,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: active ? Colors.white : AppColors.dark,
+                  ),
+                ),
               ),
             ),
-          ),
-        );
-      }).toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
-  Widget _buildProductCard(
-    Map<String, String> product,
-  ) {
+  Widget _buildRecommendationBanner() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Material(
+        color: const Color(0xFFF5EDE5),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const MenuRecommendationScreen(),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: AppColors.red),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Bingung pilih menu?',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.dark,
+                        ),
+                      ),
+                      Text(
+                        'Rekomendasi sesuai selera dan anggaranmu',
+                        style: GoogleFonts.poppins(
+                          fontSize: 10,
+                          color: AppColors.grey,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.red),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductCard(Map<String, String> product) {
     return InkWell(
       onTap: () => _openProductDetail(product),
       borderRadius: BorderRadius.circular(18),
@@ -440,10 +379,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: const Color(0xFFDEDAD5),
-            width: 1,
-          ),
+          border: Border.all(color: const Color(0xFFDEDAD5), width: 1),
         ),
         child: Row(
           children: [
@@ -454,6 +390,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 92,
                 height: 92,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox(
+                  width: 92,
+                  height: 92,
+                  child: Icon(Icons.local_cafe_outlined),
+                ),
               ),
             ),
 
@@ -508,12 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 86,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: Color(0xFFE7E3DF),
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFE7E3DF), width: 1)),
         ),
         child: Row(
           children: [
@@ -555,9 +491,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               icon,
               size: 31,
-              color: active
-                  ? AppColors.red
-                  : const Color(0xFF737373),
+              color: active ? AppColors.red : const Color(0xFF737373),
             ),
             const SizedBox(height: 5),
             Text(
@@ -565,12 +499,8 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: active
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-                color: active
-                    ? AppColors.red
-                    : const Color(0xFF737373),
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                color: active ? AppColors.red : const Color(0xFF737373),
               ),
             ),
           ],

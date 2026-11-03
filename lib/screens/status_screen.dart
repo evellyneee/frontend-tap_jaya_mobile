@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -18,8 +17,7 @@ class StatusScreen extends StatefulWidget {
 class _StatusScreenState extends State<StatusScreen> {
   int selectedTab = 0;
 
-  final OrderSessionStore orderStore =
-      OrderSessionStore.instance;
+  final OrderSessionStore orderStore = OrderSessionStore.instance;
 
   @override
   void initState() {
@@ -41,11 +39,7 @@ class _StatusScreenState extends State<StatusScreen> {
 
   Route<void> _noAnimationRoute(Widget page) {
     return PageRouteBuilder<void>(
-      pageBuilder: (
-        context,
-        animation,
-        secondaryAnimation,
-      ) {
+      pageBuilder: (context, animation, secondaryAnimation) {
         return page;
       },
       transitionDuration: Duration.zero,
@@ -69,10 +63,7 @@ class _StatusScreenState extends State<StatusScreen> {
   }
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(
-      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-      (match) => '${match[1]}.',
-    )}';
+    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
   }
 
   String formatDate(DateTime date) {
@@ -112,9 +103,7 @@ class _StatusScreenState extends State<StatusScreen> {
             _buildHeader(),
             _buildTabBar(),
             Expanded(
-              child: selectedTab == 0
-                  ? _buildActiveOrders()
-                  : _buildHistory(),
+              child: selectedTab == 0 ? _buildActiveOrders() : _buildHistory(),
             ),
           ],
         ),
@@ -165,23 +154,14 @@ class _StatusScreenState extends State<StatusScreen> {
       color: Colors.white,
       child: Row(
         children: [
-          _buildTab(
-            title: 'Pesanan Aktif',
-            index: 0,
-          ),
-          _buildTab(
-            title: 'Riwayat Pesanan',
-            index: 1,
-          ),
+          _buildTab(title: 'Pesanan Aktif', index: 0),
+          _buildTab(title: 'Riwayat Pesanan', index: 1),
         ],
       ),
     );
   }
 
-  Widget _buildTab({
-    required String title,
-    required int index,
-  }) {
+  Widget _buildTab({required String title, required int index}) {
     final bool active = selectedTab == index;
 
     return Expanded(
@@ -198,9 +178,7 @@ class _StatusScreenState extends State<StatusScreen> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: active
-                    ? AppColors.red
-                    : AppColors.lightGrey,
+                color: active ? AppColors.red : AppColors.lightGrey,
                 width: active ? 2.5 : 1,
               ),
             ),
@@ -209,12 +187,8 @@ class _StatusScreenState extends State<StatusScreen> {
             title,
             style: GoogleFonts.poppins(
               fontSize: 12,
-              fontWeight: active
-                  ? FontWeight.w600
-                  : FontWeight.w400,
-              color: active
-                  ? AppColors.red
-                  : AppColors.grey,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+              color: active ? AppColors.red : AppColors.grey,
             ),
           ),
         ),
@@ -243,10 +217,7 @@ class _StatusScreenState extends State<StatusScreen> {
         const SizedBox(height: 4),
         Text(
           'Pantau perkembangan pesananmu di sini',
-          style: GoogleFonts.poppins(
-            fontSize: 10,
-            color: AppColors.grey,
-          ),
+          style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
         ),
         const SizedBox(height: 18),
 
@@ -254,8 +225,7 @@ class _StatusScreenState extends State<StatusScreen> {
           _buildEmptyState(
             icon: Icons.receipt_long_outlined,
             title: 'Belum ada pesanan aktif',
-            subtitle:
-                'Pesanan yang sudah dibayar akan muncul di sini.',
+            subtitle: 'Pesanan yang sudah dibayar akan muncul di sini.',
           )
         else
           ...orders.map(
@@ -282,9 +252,7 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.lightGrey,
-        ),
+        border: Border.all(color: AppColors.lightGrey),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -293,8 +261,7 @@ class _StatusScreenState extends State<StatusScreen> {
             children: [
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Nomor Pesanan',
@@ -337,37 +304,23 @@ class _StatusScreenState extends State<StatusScreen> {
           ),
 
           const SizedBox(height: 14),
-          const Divider(
-            height: 1,
-            color: AppColors.lightGrey,
-          ),
+          const Divider(height: 1, color: AppColors.lightGrey),
           const SizedBox(height: 14),
 
-          _buildInfoRow(
-            label: 'Nama Pelanggan',
-            value: order.customerName,
-          ),
+          _buildInfoRow(label: 'Nama Pelanggan', value: order.customerName),
 
           if (order.tableNumber.isNotEmpty) ...[
             const SizedBox(height: 10),
-            _buildInfoRow(
-              label: 'Nomor Meja',
-              value: order.tableNumber,
-            ),
+            _buildInfoRow(label: 'Nomor Meja', value: order.tableNumber),
           ],
 
           const SizedBox(height: 10),
-          _buildInfoRow(
-            label: 'Tipe Pesanan',
-            value: order.orderType,
-          ),
+          _buildInfoRow(label: 'Tipe Pesanan', value: order.orderType),
 
           const SizedBox(height: 10),
           _buildInfoRow(
             label: 'Metode Pembayaran',
-            value: order.paymentMethod == 'online'
-                ? 'QRIS'
-                : 'Bayar di Kasir',
+            value: order.paymentMethod == 'online' ? 'QRIS' : 'Bayar di Kasir',
           ),
 
           const SizedBox(height: 16),
@@ -390,10 +343,7 @@ class _StatusScreenState extends State<StatusScreen> {
             ),
           ),
 
-          const Divider(
-            height: 18,
-            color: AppColors.lightGrey,
-          ),
+          const Divider(height: 18, color: AppColors.lightGrey),
 
           _buildInfoRow(
             label: 'Total Pembayaran',
@@ -404,20 +354,14 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  Widget _buildInfoRow({
-    required String label,
-    required String value,
-  }) {
+  Widget _buildInfoRow({required String label, required String value}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Text(
             label,
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              color: AppColors.grey,
-            ),
+            style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
           ),
         ),
         const SizedBox(width: 8),
@@ -450,9 +394,7 @@ class _StatusScreenState extends State<StatusScreen> {
               return const SizedBox(
                 width: 48,
                 height: 48,
-                child: Icon(
-                  Icons.restaurant_outlined,
-                ),
+                child: Icon(Icons.restaurant_outlined),
               );
             },
           ),
@@ -515,14 +457,11 @@ class _StatusScreenState extends State<StatusScreen> {
   Widget _buildStatusProgress(SessionOrder order) {
     final progress = order.progress;
 
-    final bool received =
-        progress.index >= OrderProgress.received.index;
+    final bool received = progress.index >= OrderProgress.received.index;
 
-    final bool processing =
-        progress.index >= OrderProgress.processing.index;
+    final bool processing = progress.index >= OrderProgress.processing.index;
 
-    final bool completed =
-        progress.index >= OrderProgress.completed.index;
+    final bool completed = progress.index >= OrderProgress.completed.index;
 
     return Container(
       width: double.infinity,
@@ -530,9 +469,7 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.lightGrey,
-        ),
+        border: Border.all(color: AppColors.lightGrey),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -576,11 +513,9 @@ class _StatusScreenState extends State<StatusScreen> {
 
           const SizedBox(height: 14),
 
-          if (progress == OrderProgress.completed)
-            _buildReadyNotice(),
+          if (progress == OrderProgress.completed) _buildReadyNotice(),
 
-          if (progress == OrderProgress.completed)
-            const SizedBox(height: 12),
+          if (progress == OrderProgress.completed) const SizedBox(height: 12),
 
           // Kontrol simulasi untuk demonstrasi.
           // Tidak menggunakan konfirmasi tambahan.
@@ -597,9 +532,7 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFE8F5EB),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xFFBDE2C6),
-        ),
+        border: Border.all(color: const Color(0xFFBDE2C6)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,13 +593,8 @@ class _StatusScreenState extends State<StatusScreen> {
         onPressed: action,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.dark,
-          side: const BorderSide(
-            color: AppColors.lightGrey,
-          ),
-          padding: const EdgeInsets.symmetric(
-            vertical: 13,
-            horizontal: 12,
-          ),
+          side: const BorderSide(color: AppColors.lightGrey),
+          padding: const EdgeInsets.symmetric(vertical: 13, horizontal: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -674,10 +602,7 @@ class _StatusScreenState extends State<StatusScreen> {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -700,39 +625,29 @@ class _StatusScreenState extends State<StatusScreen> {
               height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: active
-                    ? AppColors.red
-                    : Colors.white,
+                color: active ? AppColors.red : Colors.white,
                 border: Border.all(
-                  color: active
-                      ? AppColors.red
-                      : AppColors.lightGrey,
+                  color: active ? AppColors.red : AppColors.lightGrey,
                   width: 2,
                 ),
               ),
               child: completed
-                  ? const Icon(
-                      Icons.check,
-                      size: 13,
-                      color: Colors.white,
-                    )
+                  ? const Icon(Icons.check, size: 13, color: Colors.white)
                   : active
-                      ? const Center(
-                          child: CircleAvatar(
-                            radius: 3,
-                            backgroundColor: Colors.white,
-                          ),
-                        )
-                      : null,
+                  ? const Center(
+                      child: CircleAvatar(
+                        radius: 3,
+                        backgroundColor: Colors.white,
+                      ),
+                    )
+                  : null,
             ),
 
             if (!last)
               Container(
                 width: 2,
                 height: 45,
-                color: active
-                    ? AppColors.red
-                    : AppColors.lightGrey,
+                color: active ? AppColors.red : AppColors.lightGrey,
               ),
           ],
         ),
@@ -750,9 +665,7 @@ class _StatusScreenState extends State<StatusScreen> {
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: active
-                        ? AppColors.dark
-                        : AppColors.grey,
+                    color: active ? AppColors.dark : AppColors.grey,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -794,10 +707,7 @@ class _StatusScreenState extends State<StatusScreen> {
 
         Text(
           'Lihat kembali transaksi yang pernah dilakukan',
-          style: GoogleFonts.poppins(
-            fontSize: 10,
-            color: AppColors.grey,
-          ),
+          style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
         ),
 
         const SizedBox(height: 18),
@@ -806,8 +716,7 @@ class _StatusScreenState extends State<StatusScreen> {
           _buildEmptyState(
             icon: Icons.history,
             title: 'Belum ada riwayat pesanan',
-            subtitle:
-                'Pesanan yang sudah diambil akan muncul di sini.',
+            subtitle: 'Pesanan yang sudah diambil akan muncul di sini.',
           )
         else
           ...orders.map(
@@ -828,9 +737,7 @@ class _StatusScreenState extends State<StatusScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.lightGrey,
-        ),
+        border: Border.all(color: AppColors.lightGrey),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -877,10 +784,7 @@ class _StatusScreenState extends State<StatusScreen> {
             ),
           ),
 
-          const Divider(
-            height: 20,
-            color: AppColors.lightGrey,
-          ),
+          const Divider(height: 20, color: AppColors.lightGrey),
 
           _buildInfoRow(
             label: 'Total Pembayaran',
@@ -910,24 +814,15 @@ class _StatusScreenState extends State<StatusScreen> {
   }) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: 20,
-        vertical: 38,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 38),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.lightGrey,
-        ),
+        border: Border.all(color: AppColors.lightGrey),
       ),
       child: Column(
         children: [
-          Icon(
-            icon,
-            size: 44,
-            color: AppColors.grey,
-          ),
+          Icon(icon, size: 44, color: AppColors.grey),
 
           const SizedBox(height: 12),
 
@@ -946,10 +841,7 @@ class _StatusScreenState extends State<StatusScreen> {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 10,
-              color: AppColors.grey,
-            ),
+            style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
           ),
         ],
       ),
@@ -967,12 +859,7 @@ class _StatusScreenState extends State<StatusScreen> {
         height: 86,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: Color(0xFFE7E3DF),
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFE7E3DF), width: 1)),
         ),
         child: Row(
           children: [
@@ -1014,9 +901,7 @@ class _StatusScreenState extends State<StatusScreen> {
             Icon(
               icon,
               size: 31,
-              color: active
-                  ? AppColors.red
-                  : const Color(0xFF737373),
+              color: active ? AppColors.red : const Color(0xFF737373),
             ),
 
             const SizedBox(height: 5),
@@ -1026,12 +911,8 @@ class _StatusScreenState extends State<StatusScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: active
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-                color: active
-                    ? AppColors.red
-                    : const Color(0xFF737373),
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                color: active ? AppColors.red : const Color(0xFF737373),
               ),
             ),
           ],

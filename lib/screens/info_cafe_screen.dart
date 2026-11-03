@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -11,24 +10,14 @@ import 'status_screen.dart';
 class InfoCafeScreen extends StatelessWidget {
   const InfoCafeScreen({super.key});
 
-  void _showMessage(
-    BuildContext context,
-    String message,
-  ) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
+  void _showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Route<void> _noAnimationRoute(Widget page) {
     return PageRouteBuilder<void>(
-      pageBuilder: (
-        context,
-        animation,
-        secondaryAnimation,
-      ) {
+      pageBuilder: (context, animation, secondaryAnimation) {
         return page;
       },
       transitionDuration: Duration.zero,
@@ -45,10 +34,7 @@ class InfoCafeScreen extends StatelessWidget {
   }
 
   void _goToStatus(BuildContext context) {
-    Navigator.pushReplacement(
-      context,
-      _noAnimationRoute(const StatusScreen()),
-    );
+    Navigator.pushReplacement(context, _noAnimationRoute(const StatusScreen()));
   }
 
   @override
@@ -74,9 +60,7 @@ class InfoCafeScreen extends StatelessWidget {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 22),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -90,9 +74,7 @@ class InfoCafeScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(9),
-                            border: Border.all(
-                              color: const Color(0xFFE7E3DF),
-                            ),
+                            border: Border.all(color: const Color(0xFFE7E3DF)),
                           ),
                           child: const AppLogo(width: 48),
                         ),
@@ -203,10 +185,7 @@ class InfoCafeScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(13),
-        border: Border.all(
-          color: const Color(0xFFE0DDD9),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE0DDD9), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -228,18 +207,11 @@ class InfoCafeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(
-    IconData icon,
-    String information,
-  ) {
+  Widget _buildInfoRow(IconData icon, String information) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          size: 18,
-          color: const Color(0xFF666666),
-        ),
+        Icon(icon, size: 18, color: const Color(0xFF666666)),
 
         const SizedBox(width: 9),
 
@@ -268,12 +240,8 @@ class InfoCafeScreen extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: dark
-              ? AppColors.dark
-              : const Color(0xFFF1F1F1),
-          foregroundColor: dark
-              ? Colors.white
-              : AppColors.dark,
+          backgroundColor: dark ? AppColors.dark : const Color(0xFFF1F1F1),
+          foregroundColor: dark ? Colors.white : AppColors.dark,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(22),
@@ -282,30 +250,20 @@ class InfoCafeScreen extends StatelessWidget {
         child: Text(
           label,
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-          ),
+          style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600),
         ),
       ),
     );
   }
 
-  Widget _buildBottomNavigation(
-    BuildContext context,
-  ) {
+  Widget _buildBottomNavigation(BuildContext context) {
     return SafeArea(
       top: false,
       child: Container(
         height: 86,
         decoration: const BoxDecoration(
           color: Colors.white,
-          border: Border(
-            top: BorderSide(
-              color: Color(0xFFE7E3DF),
-              width: 1,
-            ),
-          ),
+          border: Border(top: BorderSide(color: Color(0xFFE7E3DF), width: 1)),
         ),
         child: Row(
           children: [
@@ -350,9 +308,7 @@ class InfoCafeScreen extends StatelessWidget {
             Icon(
               icon,
               size: 31,
-              color: active
-                  ? AppColors.red
-                  : const Color(0xFF737373),
+              color: active ? AppColors.red : const Color(0xFF737373),
             ),
 
             const SizedBox(height: 5),
@@ -362,12 +318,8 @@ class InfoCafeScreen extends StatelessWidget {
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 10,
-                fontWeight: active
-                    ? FontWeight.w600
-                    : FontWeight.w400,
-                color: active
-                    ? AppColors.red
-                    : const Color(0xFF737373),
+                fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                color: active ? AppColors.red : const Color(0xFF737373),
               ),
             ),
           ],
