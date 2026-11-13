@@ -71,11 +71,15 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
       ].contains(widget.menu.name);
 
   OfficialVariant get variant => widget.menu.variants[selectedVariant];
+
   int? get basePrice => variant.price;
+
   int get addonPrice => availableAddons
       .where((addon) => selectedAddons.contains(addon.name))
       .fold<int>(0, (total, addon) => total + addon.price);
+
   int? get unitPrice => basePrice == null ? null : basePrice! + addonPrice;
+
   int? get totalPrice => unitPrice == null ? null : unitPrice! * quantity;
 
   bool get canOrder =>
@@ -86,16 +90,22 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
   @override
   void initState() {
     super.initState();
+
     final old = widget.editingItem;
+
     final match = widget.menu.variants.indexWhere((v) => v.label == old?.size);
+
     selectedVariant = match < 0 ? 0 : match;
     quantity = old?.quantity ?? 1;
     lessIce = old?.lessIce ?? false;
     lessSugar = old?.lessSugar ?? false;
+
     final parts = old?.id.split('|') ?? <String>[];
+
     selectedAddons = parts.length > 3 && parts[3].isNotEmpty
         ? parts[3].split(',').toSet()
         : <String>{};
+
     noteController = TextEditingController(
       text: parts.length >= 7 ? parts.skip(6).join('|') : '',
     );
@@ -110,6 +120,7 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
   CartItem _buildItem() {
     final extras = selectedAddons.toList()..sort();
     final note = noteController.text.trim();
+
     return CartItem(
       id: [
         'official',
@@ -136,16 +147,21 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
 
   Future<void> _addToCart() async {
     if (!canOrder || !mounted) return;
+
     final item = _buildItem();
+
     if (widget.editingItem != null) {
       CartStore.instance.updateItem(
         currentId: widget.editingItem!.id,
         updatedItem: item,
       );
+
       Navigator.pop(context);
       return;
     }
+
     CartStore.instance.addItem(item);
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: AppColors.dark,
@@ -159,7 +175,9 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
 
   Future<void> _buyNow() async {
     if (!canOrder || !mounted) return;
+
     final item = _buildItem();
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -218,7 +236,7 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
         : Image.asset(
             widget.menu.imagePath!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const Center(
+            errorBuilder: (context, error, stackTrace) => const Center(
               child: Icon(Icons.image_not_supported_outlined, size: 48),
             ),
           ),
@@ -233,9 +251,7 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
           children: [
             for (int i = 0; i < widget.menu.variants.length; i++)
               InkWell(
-                onTap: widget.menu.variants[i].price == null
-                    ? null
-                    : () => setState(() => selectedVariant = i),
+                onTap: () => setState(() => selectedVariant = i),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 9),
                   child: Row(
@@ -257,17 +273,13 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
                         ),
                       ),
                       Text(
-                        widget.menu.variants[i].price == null
-                            ? 'Belum tersedia'
-                            : OfficialMenuCatalog.formatRupiah(
-                                widget.menu.variants[i].price!,
-                              ),
+                        OfficialMenuCatalog.formatRupiah(
+                          widget.menu.variants[i].price,
+                        ),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: widget.menu.variants[i].price == null
-                              ? AppColors.grey
-                              : AppColors.dark,
+                          color: AppColors.dark,
                         ),
                       ),
                     ],
@@ -458,6 +470,7 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
   @override
   Widget build(BuildContext context) {
     final menu = widget.menu;
+
     return Scaffold(
       backgroundColor: AppColors.warmWhite,
       appBar: AppBar(

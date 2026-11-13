@@ -1,16 +1,21 @@
 // TAP_JAYA_FINAL_2026: katalog resmi, bahasa deskripsi Indonesia.
 // Data resmi: TKJ Begawan West Menu (Digital), © August 2026.
-// Harga disalin dari PDF perusahaan. Opsi kombinasi tambahan hanya rancangan UI/UX TAP JAYA.
+// Harga disalin dari PDF perusahaan.
+// Opsi kombinasi tambahan hanya rancangan UI/UX TAP JAYA.
+
 class OfficialAddon {
   final String name;
   final int price;
+
   const OfficialAddon(this.name, this.price);
 }
 
 class OfficialVariant {
   final String name;
   final int price;
+
   const OfficialVariant(this.name, this.price);
+
   String get label => name;
 }
 
@@ -18,6 +23,7 @@ class OfficialProduct {
   final String id, name, category, description;
   final String? image;
   final List<OfficialVariant> variants;
+
   const OfficialProduct(
     this.id,
     this.name,
@@ -26,15 +32,19 @@ class OfficialProduct {
     this.image,
     this.variants,
   );
+
   String? get imagePath => image;
+
   bool get priceVerified => true;
+
   int get lowestPrice =>
       variants.map((e) => e.price).reduce((a, b) => a < b ? a : b);
 }
 
 class OfficialMenuCatalog {
   OfficialMenuCatalog._();
-  // Kategori tetap dalam bahasa Inggris, sesuai menu TKJ Begawan West.
+
+  // Kategori sesuai menu TKJ Begawan West.
   static const categories = <String>[
     'Semua',
     'Signature',
@@ -49,6 +59,7 @@ class OfficialMenuCatalog {
     'Pizza Porter',
     'Snack',
   ];
+
   static const addOnPrices = <String, int>{
     "Mineral Water": 7273,
     "Extra Shot": 8182,
@@ -63,7 +74,8 @@ class OfficialMenuCatalog {
     "BBQ Sauce": 6364,
     "Coffee Sauce": 6364,
   };
-  // Produk dan harga berdasarkan PDF perusahaan (Add On hanya untuk detail).
+
+  // Produk dan harga berdasarkan katalog yang sudah ada.
   static const menus = <OfficialProduct>[
     OfficialProduct(
       "berjaya_di_bali",
@@ -733,6 +745,7 @@ class OfficialMenuCatalog {
       <OfficialVariant>[OfficialVariant("Satuan", 6364)],
     ),
   ];
+
   static OfficialProduct? byName(String name) {
     for (final menu in menus) {
       if (menu.name == name) return menu;
@@ -754,6 +767,7 @@ class OfficialMenuCatalog {
 
   static List<String> relevantAddons(OfficialProduct menu) {
     if (menu.category == 'Add On') return const [];
+
     if (const [
       'Signature',
       'Manual',
@@ -762,6 +776,7 @@ class OfficialMenuCatalog {
     ].contains(menu.category)) {
       return const ['Extra Shot', 'Gula Aren', 'Whip Cream', 'Madu'];
     }
+
     if (const [
       'Tea',
       'Milk Based',
@@ -770,6 +785,7 @@ class OfficialMenuCatalog {
     ].contains(menu.category)) {
       return const ['Gula Aren', 'Whip Cream', 'Madu'];
     }
+
     if (menu.category == 'Main Course') {
       return const [
         'Nasi Uduk',
@@ -778,8 +794,11 @@ class OfficialMenuCatalog {
         'Chili Oil',
       ];
     }
-    if (menu.category == 'Pizza Porter')
+
+    if (menu.category == 'Pizza Porter') {
       return const ['Chili Oil', 'Chili Sauce'];
+    }
+
     if (menu.category == 'Chicken Wings' ||
         menu.category == 'Snack' ||
         menu.category == 'JMX Platter') {
@@ -791,6 +810,7 @@ class OfficialMenuCatalog {
         'Chili Oil',
       ];
     }
+
     return const [];
   }
 
@@ -801,7 +821,9 @@ class OfficialMenuCatalog {
   }
 
   static String formatRupiah(int value) => rupiah(value);
+
   static const allowHistoricalPrototypeOrder = true;
+
   static List<Map<String, String>> get referenceProducts {
     return menus
         .where((m) => m.category != 'Add On')

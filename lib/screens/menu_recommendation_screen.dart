@@ -113,7 +113,7 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
             _heading('Anggaran maksimal'),
             const SizedBox(height: 8),
             DropdownButtonFormField<int>(
-              value: _budget,
+              initialValue: _budget,
               decoration: InputDecoration(
                 filled: true,
                 fillColor: Colors.white,
@@ -135,7 +135,9 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
                   )
                   .toList(),
               onChanged: (value) {
-                if (value != null) setState(() => _budget = value);
+                if (value != null) {
+                  setState(() => _budget = value);
+                }
               },
             ),
             const SizedBox(height: 24),
@@ -185,6 +187,7 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
 
   Widget _recommendationCard(MenuRecommendation result) {
     final product = result.product;
+
     return Card(
       color: Colors.white,
       surfaceTintColor: Colors.white,
@@ -195,7 +198,7 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
         onTap: () => Navigator.push(
           context,
           MaterialPageRoute<void>(
-            builder: (_) => DetailOfficialScreen(menu: product),
+            builder: (context) => DetailOfficialScreen(menu: product),
           ),
         ),
         child: Padding(
@@ -215,11 +218,12 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
                         width: 82,
                         height: 82,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, error, stack) => const SizedBox(
-                          width: 82,
-                          height: 82,
-                          child: Icon(Icons.image_not_supported),
-                        ),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const SizedBox(
+                              width: 82,
+                              height: 82,
+                              child: Icon(Icons.image_not_supported),
+                            ),
                       ),
               ),
               const SizedBox(width: 10),

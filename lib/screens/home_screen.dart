@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'detail_official_screen.dart';
 import 'menu_recommendation_screen.dart';
 import '../models/official_menu_catalog.dart';
+import '../viewmodels/menu_viewmodel.dart';
 
 import '../core/constants/app_colors.dart';
 import '../services/cart_store.dart';
@@ -28,26 +29,37 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final CartStore cartStore = CartStore.instance;
 
+  final MenuViewModel menuViewModel = MenuViewModel();
+
   final List<String> categories = OfficialMenuCatalog.categories;
 
-  final List<Map<String, String>> products =
-      OfficialMenuCatalog.referenceProducts;
+  List<Map<String, String>> get products => menuViewModel.products;
 
   @override
   void initState() {
     super.initState();
+
     cartStore.addListener(_refreshCart);
+    menuViewModel.addListener(_refreshMenu);
+
+    menuViewModel.loadProducts();
   }
 
   void _refreshCart() {
     if (!mounted) return;
+    setState(() {});
+  }
 
+  void _refreshMenu() {
+    if (!mounted) return;
     setState(() {});
   }
 
   @override
   void dispose() {
     cartStore.removeListener(_refreshCart);
+    menuViewModel.removeListener(_refreshMenu);
+    menuViewModel.dispose();
     searchController.dispose();
     super.dispose();
   }
@@ -73,21 +85,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Map<String, String>> get filteredProducts {
     final query = searchText.trim().toLowerCase();
+
     return products.where((product) {
       final matchesCategory =
           selectedCategory == 'Semua' ||
           product['category'] == selectedCategory;
+
       final matchesSearch =
           query.isEmpty ||
           (product['name'] ?? '').toLowerCase().contains(query) ||
           (product['description'] ?? '').toLowerCase().contains(query);
+
       return matchesCategory && matchesSearch;
     }).toList();
   }
 
   void _openProductDetail(Map<String, String> product) {
     final menu = OfficialMenuCatalog.byName(product['name'] ?? '');
+
     if (menu == null) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => DetailOfficialScreen(menu: menu)),
@@ -113,7 +130,37 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildCategories(),
                     _buildRecommendationBanner(),
                     const SizedBox(height: 18),
-                    if (filteredProducts.isEmpty)
+
+                    if (menuViewModel.isLoading)
+                      const Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (menuViewModel.hasError)
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            Text(
+                              menuViewModel.errorMessage ??
+                                  'Gagal mengambil menu',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: AppColors.red,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton(
+                              onPressed: () {
+                                menuViewModel.loadProducts();
+                              },
+                              child: const Text('Coba Lagi'),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (filteredProducts.isEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 50),
                         child: Text(
@@ -166,9 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: const AppLogo(width: 38),
           ),
-
           const SizedBox(width: 13),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,7 +238,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -209,7 +253,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.white,
                   size: 28,
                 ),
-
                 if (cartCount > 0)
                   Positioned(
                     right: -8,
@@ -289,6 +332,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: categories.map((category) {
           final active = selectedCategory == category;
+
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: GestureDetector(
@@ -329,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute<void>(
-              builder: (_) => const MenuRecommendationScreen(),
+              builder: (context) => const MenuRecommendationScreen(),
             ),
           ),
           child: Padding(
@@ -390,16 +434,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 92,
                 height: 92,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const SizedBox(
+                errorBuilder: (context, error, stackTrace) => const SizedBox(
                   width: 92,
                   height: 92,
                   child: Icon(Icons.local_cafe_outlined),
                 ),
               ),
             ),
-
             const SizedBox(width: 13),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
