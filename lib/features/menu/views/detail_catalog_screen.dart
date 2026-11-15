@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
 /// Pratinjau produk referensi. Produk belum aktif di checkout karena
 /// harga dan ketersediaannya belum dikonfirmasi untuk cabang Begawan.

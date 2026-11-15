@@ -1,10 +1,10 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../widgets/app_logo.dart';
-import 'home_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/widgets/app_logo.dart';
+
+import 'package:tap_jaya_mobile/features/menu/views/home_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -12,9 +12,7 @@ class SplashScreen extends StatelessWidget {
   void _nextPage(BuildContext context) {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute<void>(
-        builder: (context) => const HomeScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
     );
   }
 
@@ -56,10 +54,7 @@ class SplashScreen extends StatelessWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 28,
-                vertical: 24,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
               child: Column(
                 children: [
                   const Spacer(flex: 4),
@@ -79,9 +74,7 @@ class SplashScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Center(
-                      child: AppLogo(width: 120),
-                    ),
+                    child: const Center(child: AppLogo(width: 120)),
                   ),
 
                   const SizedBox(height: 32),
@@ -136,10 +129,7 @@ class SplashScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 20,
-                          ),
+                          const Icon(Icons.arrow_forward_rounded, size: 20),
                         ],
                       ),
                     ),

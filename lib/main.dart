@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+
+import 'package:tap_jaya_mobile/app/views/splash_screen.dart';
 
 void main() {
   runApp(const TapJayaApp());

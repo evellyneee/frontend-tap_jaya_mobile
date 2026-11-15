@@ -2,17 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'detail_official_screen.dart';
-import 'menu_recommendation_screen.dart';
+
+import 'package:tap_jaya_mobile/features/recommendations/views/menu_recommendation_screen.dart';
+
 import '../models/official_menu_catalog.dart';
 import '../viewmodels/menu_viewmodel.dart';
 
-import '../core/constants/app_colors.dart';
-import '../services/cart_store.dart';
-import '../widgets/app_logo.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
-import 'cart_screen.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+
+import 'package:tap_jaya_mobile/widgets/app_logo.dart';
+
+import 'package:tap_jaya_mobile/features/cart/views/cart_screen.dart';
+
 import 'info_cafe_screen.dart';
-import 'status_screen.dart';
+
+import 'package:tap_jaya_mobile/features/orders/views/status_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

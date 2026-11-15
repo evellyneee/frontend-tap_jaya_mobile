@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../services/order_session_store.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
-import 'home_screen.dart';
-import 'info_cafe_screen.dart';
+import 'package:tap_jaya_mobile/features/orders/viewmodels/order_session_store.dart';
+
+import 'package:tap_jaya_mobile/features/menu/views/home_screen.dart';
+import 'package:tap_jaya_mobile/features/menu/views/info_cafe_screen.dart';
 
 class StatusScreen extends StatefulWidget {
   const StatusScreen({super.key});

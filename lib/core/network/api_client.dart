@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import '../config/api_config.dart';
+import 'package:tap_jaya_mobile/core/config/api_config.dart';
 
 class ApiClient {
   const ApiClient();

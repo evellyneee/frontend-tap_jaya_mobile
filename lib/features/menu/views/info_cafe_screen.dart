@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../widgets/app_logo.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/widgets/app_logo.dart';
 
 import 'home_screen.dart';
-import 'status_screen.dart';
+
+import 'package:tap_jaya_mobile/features/orders/views/status_screen.dart';
 
 class InfoCafeScreen extends StatelessWidget {
   const InfoCafeScreen({super.key});

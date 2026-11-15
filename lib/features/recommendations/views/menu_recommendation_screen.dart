@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../models/official_menu_catalog.dart';
-import '../services/menu_recommendation_service.dart';
-import 'detail_official_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+
+import 'package:tap_jaya_mobile/features/menu/models/official_menu_catalog.dart';
+import 'package:tap_jaya_mobile/features/recommendations/viewmodels/menu_recommendation_service.dart';
+
+import 'package:tap_jaya_mobile/features/menu/views/detail_official_screen.dart';
 
 /// Halaman preferensi + 3 rekomendasi yang terhubung ke detail menu existing.
 class MenuRecommendationScreen extends StatefulWidget {

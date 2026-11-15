@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../models/cart_item.dart';
-import '../services/cart_store.dart';
-import 'customer_information_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+
+import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+
+import 'package:tap_jaya_mobile/features/checkout/views/customer_information_screen.dart';
 
 class OrderScreen extends StatefulWidget {
   final int subtotal;

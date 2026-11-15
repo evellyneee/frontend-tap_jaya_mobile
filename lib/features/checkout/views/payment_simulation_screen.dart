@@ -9,11 +9,13 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../core/constants/app_colors.dart';
-import '../models/cart_item.dart';
-import '../services/cart_store.dart';
-import '../services/order_session_store.dart';
-import 'home_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+
+import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/orders/viewmodels/order_session_store.dart';
+
+import 'package:tap_jaya_mobile/features/menu/views/home_screen.dart';
 
 class PaymentSimulationScreen extends StatefulWidget {
   final String paymentMethod;

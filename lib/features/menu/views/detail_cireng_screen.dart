@@ -1,34 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../models/cart_item.dart';
-import '../services/cart_store.dart';
-import 'order_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
-class DetailProductScreen extends StatefulWidget {
-  final ValueChanged<int>? onAddToCart;
+import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
 
-  const DetailProductScreen({super.key, this.onAddToCart});
+import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
+
+class DetailCirengScreen extends StatefulWidget {
+  const DetailCirengScreen({super.key});
 
   @override
-  State<DetailProductScreen> createState() => _DetailProductScreenState();
+  State<DetailCirengScreen> createState() => _DetailCirengScreenState();
 }
 
-class _DetailProductScreenState extends State<DetailProductScreen> {
-  String selectedSize = 'Large';
-  bool extraShot = false;
-  bool lessIce = false;
-  bool lessSugar = true;
+class _DetailCirengScreenState extends State<DetailCirengScreen> {
+  static const int basePrice = 15455;
+  static const int extraSambalPrice = 2000;
+
+  bool extraSambal = false;
   int quantity = 1;
 
   final TextEditingController noteController = TextEditingController();
 
-  int get basePrice => selectedSize == 'Regular' ? 24545 : 30000;
-
-  int get additionalPrice => extraShot ? 5000 : 0;
-
-  int get unitPrice => basePrice + additionalPrice;
+  int get unitPrice => basePrice + (extraSambal ? extraSambalPrice : 0);
 
   int get totalPrice => unitPrice * quantity;
 
@@ -37,32 +33,35 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
   }
 
   String get cartItemId => [
-    'kopi-susu-berjaya-di-bali',
-    selectedSize,
-    extraShot ? 'extra-shot' : 'no-extra-shot',
-    lessIce ? 'less-ice' : 'normal-ice',
-    lessSugar ? 'less-sugar' : 'normal-sugar',
+    'cireng',
+    extraSambal ? 'extra-sambal' : 'normal-sambal',
     noteController.text.trim(),
   ].join('|');
 
   CartItem createOrderItem() {
+    final String customerNote = noteController.text.trim();
+
+    final String itemNote = [
+      if (extraSambal) 'Extra Sambal (+Rp 2.000)',
+      if (customerNote.isNotEmpty) customerNote,
+    ].join(' | ');
+
     return CartItem(
       id: cartItemId,
-      productName: 'Kopi Susu Berjaya di Bali',
-      imagePath: 'assets/images/kopi_susu_bali.png',
+      productName: 'Cireng',
+      imagePath: 'assets/images/cireng.png',
       unitPrice: unitPrice,
       quantity: quantity,
-      size: selectedSize,
-      extraShot: extraShot,
-      lessIce: lessIce,
-      lessSugar: lessSugar,
-      note: noteController.text.trim(),
+      size: '',
+      extraShot: false,
+      lessIce: false,
+      lessSugar: false,
+      note: itemNote,
     );
   }
 
   void addToCart() {
     CartStore.instance.addItem(createOrderItem());
-    widget.onAddToCart?.call(quantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -104,25 +103,31 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProductImage(),
                     const SizedBox(height: 20),
                     _buildProductInfo(),
-                    const SizedBox(height: 20),
-                    _buildSizeSection(),
                     const SizedBox(height: 18),
                     _buildAdditionalSection(),
-                    const SizedBox(height: 18),
-                    _buildNoteSection(),
-                    const SizedBox(height: 18),
-                    _buildTotal(),
-                    const SizedBox(height: 18),
-                    _buildBottomActions(),
                   ],
                 ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildNoteSection(),
+                  const SizedBox(height: 18),
+                  _buildTotal(),
+                  const SizedBox(height: 18),
+                  _buildBottomActions(),
+                ],
               ),
             ),
           ],
@@ -166,7 +171,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: Image.asset(
-          'assets/images/kopi_susu_bali.png',
+          'assets/images/cireng.png',
           width: 185,
           height: 185,
           fit: BoxFit.cover,
@@ -188,7 +193,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Kopi Susu Berjaya di Bali',
+            'Cireng',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -206,7 +211,7 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Perpaduan espresso mantap, susu creamy, dan gula aren khas Bali dengan cita rasa manis yang pas.',
+            'Aci goreng garing dengan cocolan sambal.',
             style: GoogleFonts.poppins(
               fontSize: 12,
               height: 1.4,
@@ -214,93 +219,6 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSizeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Pilih Ukuran*',
-          style: GoogleFonts.poppins(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: AppColors.dark,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E0DB)),
-          ),
-          child: Column(
-            children: [
-              _buildSizeOption(
-                value: 'Regular',
-                label: 'Regular (R)',
-                price: 'Rp 24.545',
-              ),
-              _buildSizeOption(
-                value: 'Large',
-                label: 'Large (L)',
-                price: 'Rp 30.000',
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSizeOption({
-    required String value,
-    required String label,
-    required String price,
-  }) {
-    final bool selected = selectedSize == value;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedSize = value;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
-              size: 20,
-              color: AppColors.dark,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: AppColors.dark,
-                ),
-              ),
-            ),
-            Text(
-              price,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: AppColors.dark,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -326,76 +244,46 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: const Color(0xFFE5E0DB)),
           ),
-          child: Column(
-            children: [
-              _buildAdditionalOption(
-                label: 'Extra Shot Espresso',
-                price: '+Rp 5.000',
-                value: extraShot,
-                onChanged: (value) {
-                  setState(() {
-                    extraShot = value;
-                  });
-                },
+          child: InkWell(
+            onTap: () {
+              setState(() {
+                extraSambal = !extraSambal;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Icon(
+                    extraSambal
+                        ? Icons.check_box
+                        : Icons.check_box_outline_blank,
+                    size: 20,
+                    color: AppColors.dark,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Extra Sambal',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.dark,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '+Rp 2.000',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: AppColors.dark,
+                    ),
+                  ),
+                ],
               ),
-              _buildAdditionalOption(
-                label: 'Less Ice',
-                price: '+Rp 0',
-                value: lessIce,
-                onChanged: (value) {
-                  setState(() {
-                    lessIce = value;
-                  });
-                },
-              ),
-              _buildAdditionalOption(
-                label: 'Less Sugar',
-                price: '+Rp 0',
-                value: lessSugar,
-                onChanged: (value) {
-                  setState(() {
-                    lessSugar = value;
-                  });
-                },
-              ),
-            ],
+            ),
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildAdditionalOption({
-    required String label,
-    required String price,
-    required bool value,
-    required ValueChanged<bool> onChanged,
-  }) {
-    return InkWell(
-      onTap: () => onChanged(!value),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Icon(
-              value ? Icons.check_box : Icons.check_box_outline_blank,
-              size: 20,
-              color: AppColors.dark,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
-              ),
-            ),
-            Text(
-              price,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -414,9 +302,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: noteController,
+          maxLines: 3,
           style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
           decoration: InputDecoration(
-            hintText: 'Tambah catatan pesanan (misal: sedikit es)...',
+            hintText: 'Tambah catatan pesanan (misal: sambal dipisah, tidak terlalu pedas)...',
             hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
             filled: true,
             fillColor: Colors.white,

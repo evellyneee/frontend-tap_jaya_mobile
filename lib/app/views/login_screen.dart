@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../widgets/app_logo.dart';
-import 'home_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/widgets/app_logo.dart';
+
+import 'package:tap_jaya_mobile/features/menu/views/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

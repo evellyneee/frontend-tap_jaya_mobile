@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+
 import '../models/cart_item.dart';
-import '../services/cart_store.dart';
+
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
 
 class CartItemEditScreen extends StatefulWidget {
   final String productName;

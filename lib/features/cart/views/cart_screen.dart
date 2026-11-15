@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'detail_official_screen.dart';
-import '../models/official_menu_catalog.dart';
+import 'package:tap_jaya_mobile/features/menu/views/detail_official_screen.dart';
 
-import '../core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/features/menu/models/official_menu_catalog.dart';
+
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+
 import '../models/cart_item.dart';
-import '../services/cart_store.dart';
+
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+
 import 'cart_item_edit_screen.dart';
-import 'order_screen.dart';
+
+import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});

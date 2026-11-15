@@ -1,25 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/constants/app_colors.dart';
-import '../models/cart_item.dart';
-import '../services/cart_store.dart';
-import 'order_screen.dart';
+import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
-class DetailBakmieScreen extends StatefulWidget {
-  final ValueChanged<int>? onAddToCart;
+import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
 
-  const DetailBakmieScreen({super.key, this.onAddToCart});
+import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
+
+class DetailMilkshakeScreen extends StatefulWidget {
+  const DetailMilkshakeScreen({super.key});
 
   @override
-  State<DetailBakmieScreen> createState() => _DetailBakmieScreenState();
+  State<DetailMilkshakeScreen> createState() => _DetailMilkshakeScreenState();
 }
 
-class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
+class _DetailMilkshakeScreenState extends State<DetailMilkshakeScreen> {
+  bool lessSugar = false;
+  bool lessIce = false;
   int quantity = 1;
+
   final TextEditingController noteController = TextEditingController();
 
-  final int unitPrice = 28182;
+  static const int unitPrice = 24545;
 
   int get totalPrice => unitPrice * quantity;
 
@@ -27,27 +30,30 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
     return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
   }
 
-  String get cartItemId =>
-      ['bakmie-jaya', noteController.text.trim()].join('|');
+  String get cartItemId => [
+    'milkshake-sweet-mango',
+    lessSugar ? 'less-sugar' : 'normal-sugar',
+    lessIce ? 'less-ice' : 'normal-ice',
+    noteController.text.trim(),
+  ].join('|');
 
   CartItem createOrderItem() {
     return CartItem(
       id: cartItemId,
-      productName: 'Bakmie Jaya',
-      imagePath: 'assets/images/bakmie_jaya.png',
+      productName: 'Milkshake Sweet Mango',
+      imagePath: 'assets/images/milkshake_sweet_mango.png',
       unitPrice: unitPrice,
       quantity: quantity,
-      size: '',
+      size: 'Large',
       extraShot: false,
-      lessIce: false,
-      lessSugar: false,
+      lessIce: lessIce,
+      lessSugar: lessSugar,
       note: noteController.text.trim(),
     );
   }
 
   void addToCart() {
     CartStore.instance.addItem(createOrderItem());
-    widget.onAddToCart?.call(quantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -96,6 +102,8 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
                     _buildProductImage(),
                     const SizedBox(height: 20),
                     _buildProductInfo(),
+                    const SizedBox(height: 18),
+                    _buildAdditionalSection(),
                   ],
                 ),
               ),
@@ -155,7 +163,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: Image.asset(
-          'assets/images/bakmie_jaya.png',
+          'assets/images/milkshake_sweet_mango.png',
           width: 185,
           height: 185,
           fit: BoxFit.cover,
@@ -177,7 +185,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bakmie Jaya',
+            'Milkshake Sweet Mango',
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -195,7 +203,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Mie kenyal dengan topping ayam gurih.',
+            'Perpaduan susu dan buah mangga yang segar.',
             style: GoogleFonts.poppins(
               fontSize: 12,
               height: 1.4,
@@ -203,6 +211,90 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdditionalSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Additional (Opsional)',
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: AppColors.dark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E0DB)),
+          ),
+          child: Column(
+            children: [
+              _buildAdditionalOption(
+                label: 'Less Sugar',
+                price: '+Rp 0',
+                value: lessSugar,
+                onChanged: (value) {
+                  setState(() {
+                    lessSugar = value;
+                  });
+                },
+              ),
+              _buildAdditionalOption(
+                label: 'Less Ice',
+                price: '+Rp 0',
+                value: lessIce,
+                onChanged: (value) {
+                  setState(() {
+                    lessIce = value;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdditionalOption({
+    required String label,
+    required String price,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return InkWell(
+      onTap: () => onChanged(!value),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            Icon(
+              value ? Icons.check_box : Icons.check_box_outline_blank,
+              size: 20,
+              color: AppColors.dark,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+              ),
+            ),
+            Text(
+              price,
+              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -225,8 +317,7 @@ class _DetailBakmieScreenState extends State<DetailBakmieScreen> {
           maxLines: 3,
           style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
           decoration: InputDecoration(
-            hintText:
-                'Tambah catatan pesanan (misal: tidak pedas, pedas level 2)...',
+            hintText: 'Tambah catatan pesanan (misal: jangan terlalu manis)...',
             hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
             filled: true,
             fillColor: Colors.white,
