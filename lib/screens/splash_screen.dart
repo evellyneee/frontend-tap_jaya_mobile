@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/constants/app_colors.dart';
 import '../widgets/app_logo.dart';
-import 'login_screen.dart';
+import 'home_screen.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -13,7 +13,7 @@ class SplashScreen extends StatelessWidget {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute<void>(
-        builder: (context) => const LoginScreen(),
+        builder: (context) => const HomeScreen(),
       ),
     );
   }
@@ -29,7 +29,6 @@ class SplashScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Ornamen lembut di sudut kanan atas
             Positioned(
               top: -95,
               right: -90,
@@ -43,7 +42,6 @@ class SplashScreen extends StatelessWidget {
               ),
             ),
 
-            // Ornamen lembut di sudut kiri bawah
             Positioned(
               bottom: 100,
               left: -110,
@@ -66,7 +64,6 @@ class SplashScreen extends StatelessWidget {
                 children: [
                   const Spacer(flex: 4),
 
-                  // Logo asli TAP JAYA
                   Container(
                     width: 165,
                     height: 165,
@@ -76,9 +73,7 @@ class SplashScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(28),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(
-                            alpha: 0.045,
-                          ),
+                          color: Colors.black.withValues(alpha: 0.045),
                           blurRadius: 25,
                           offset: const Offset(0, 10),
                         ),
@@ -91,7 +86,6 @@ class SplashScreen extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // Judul utama
                   Text(
                     'Welcome to Tapjaya',
                     textAlign: TextAlign.center,
@@ -105,7 +99,6 @@ class SplashScreen extends StatelessWidget {
 
                   const SizedBox(height: 12),
 
-                  // Deskripsi singkat
                   Text(
                     'Temukan menu favoritmu dan nikmati '
                     'kemudahan memesan di TAP JAYA.',
@@ -119,7 +112,6 @@ class SplashScreen extends StatelessWidget {
 
                   const Spacer(flex: 5),
 
-                  // Tombol Mulai Pesan
                   SizedBox(
                     width: double.infinity,
                     height: 56,
