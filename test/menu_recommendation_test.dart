@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tap_jaya_mobile/services/menu_recommendation_service.dart';
+
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_preference.dart';
+
+import 'package:tap_jaya_mobile/features/recommendations/services/menu_recommendation_service.dart';
 
 void main() {
   const service = MenuRecommendationService();

@@ -2,13 +2,14 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:tap_jaya_mobile/services/customer_api_service.dart';
+import 'package:tap_jaya_mobile/features/menu/repositories/customer_repository.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('Customer API berhasil mengambil produk aktif', (tester) async {
-    final products = await CustomerApiService.getProducts();
+    final repository = CustomerRepository();
+    final products = await repository.getProducts();
 
     expect(products, isNotEmpty);
 

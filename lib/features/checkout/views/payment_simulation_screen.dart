@@ -12,7 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
 import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 import 'package:tap_jaya_mobile/features/orders/viewmodels/order_session_store.dart';
 
 import 'package:tap_jaya_mobile/features/menu/views/home_screen.dart';
@@ -219,7 +219,7 @@ class _PaymentSimulationScreenState extends State<PaymentSimulationScreen> {
     // Produk yang tidak dipilih tetap ada.
     // Beli Sekarang tidak menghapus keranjang.
     if (widget.isCartCheckout) {
-      CartStore.instance.removePurchasedItems(widget.orderItems);
+      CartViewModel.instance.removePurchasedItems(widget.orderItems);
     }
 
     countdownTimer?.cancel();

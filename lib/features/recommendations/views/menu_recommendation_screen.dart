@@ -4,7 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
 import 'package:tap_jaya_mobile/features/menu/models/official_menu_catalog.dart';
-import 'package:tap_jaya_mobile/features/recommendations/viewmodels/menu_recommendation_service.dart';
+import 'package:tap_jaya_mobile/features/recommendations/services/menu_recommendation_service.dart';
+
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_preference.dart';
+
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_recommendation.dart';
 
 import 'package:tap_jaya_mobile/features/menu/views/detail_official_screen.dart';
 

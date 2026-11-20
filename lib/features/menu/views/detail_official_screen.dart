@@ -7,7 +7,7 @@ import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
 
 import '../models/official_menu_catalog.dart';
 
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 
 import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
 
@@ -155,7 +155,7 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
     final item = _buildItem();
 
     if (widget.editingItem != null) {
-      CartStore.instance.updateItem(
+      CartViewModel.instance.updateItem(
         currentId: widget.editingItem!.id,
         updatedItem: item,
       );
@@ -164,7 +164,7 @@ class _DetailOfficialScreenState extends State<DetailOfficialScreen> {
       return;
     }
 
-    CartStore.instance.addItem(item);
+    CartViewModel.instance.addItem(item);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

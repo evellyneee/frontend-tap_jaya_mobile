@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
 import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 
 import 'package:tap_jaya_mobile/features/checkout/views/customer_information_screen.dart';
 
@@ -37,7 +37,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
     final sourceItems =
         widget.orderItems ??
-        CartStore.instance.items.where((item) => item.isSelected).toList();
+        CartViewModel.instance.items.where((item) => item.isSelected).toList();
 
     // Snapshot supaya jumlah dan konfigurasi
     // pesanan tidak berubah selama checkout.

@@ -1,35 +1,14 @@
 import 'dart:math' as math;
 
 import '../../menu/models/official_menu_catalog.dart';
+import '../models/menu_preference.dart';
+import '../models/menu_recommendation.dart';
 
-/// Preferensi eksplisit dari pelanggan (tanpa akun dan tanpa server).
-class MenuPreference {
-  final String group;
-  final String taste;
-  final int? maximumPrice;
-
-  const MenuPreference({
-    this.group = 'Minuman',
-    this.taste = 'Creamy',
-    this.maximumPrice = 40000,
-  });
-}
-
-class MenuRecommendation {
-  final OfficialProduct product;
-  final double score;
-  final String reason;
-
-  const MenuRecommendation({
-    required this.product,
-    required this.score,
-    required this.reason,
-  });
-}
-
-/// Content-Based Filtering: TF-IDF dari teks menu + cosine similarity.
-/// Ini prototipe rekomendasi berbasis konten, BUKAN model yang sudah
-/// dilatih dari riwayat pembelian pelanggan.
+/// Content-Based Filtering menggunakan TF-IDF
+/// dan Cosine Similarity.
+///
+/// Service ini bertugas menghitung rekomendasi menu
+/// berdasarkan preferensi pelanggan dan data katalog.
 class MenuRecommendationService {
   const MenuRecommendationService();
 
@@ -93,7 +72,6 @@ class MenuRecommendationService {
     'Kopi Kuat': 'kuat pekat espresso kopi robusta',
     'Gurih': 'gurih asin ayam nasi keju mentega',
     'Pedas': 'pedas cabai sambal spicy nashville',
-    'Apa saja': '',
   };
 
   static final Map<String, String> _groupQueries = {
@@ -103,17 +81,20 @@ class MenuRecommendationService {
     'Snack': 'snack camilan renyah saus gyoza',
   };
 
+  /// Menghasilkan rekomendasi berdasarkan preferensi pelanggan.
   List<MenuRecommendation> recommend(
     MenuPreference preference, {
     int limit = 3,
   }) {
     if (limit <= 0) return const [];
 
+    // Mengambil seluruh produk dari katalog.
     // Add On tidak direkomendasikan sebagai produk utama.
     final allProducts = OfficialMenuCatalog.menus
         .where((product) => product.category != 'Add On')
         .toList(growable: false);
 
+    // Menyaring produk berdasarkan kategori dan anggaran.
     final candidates = allProducts
         .where((product) {
           if (!_matchesGroup(product, preference.group)) {
@@ -132,7 +113,7 @@ class MenuRecommendationService {
 
     if (candidates.isEmpty) return const [];
 
-    // IDF dihitung dari keseluruhan katalog, bukan dari 3 hasil terpilih.
+    // Menghitung frekuensi kata dari seluruh katalog.
     final documents = allProducts.map(_productTokens).toList(growable: false);
 
     final frequency = <String, int>{};
@@ -143,29 +124,32 @@ class MenuRecommendationService {
       }
     }
 
+    // Menghitung Inverse Document Frequency (IDF).
     final idf = <String, double>{};
 
     for (final entry in frequency.entries) {
       idf[entry.key] = math.log((1 + documents.length) / (1 + entry.value)) + 1;
     }
 
+    // Membentuk kata kunci preferensi pelanggan.
     final tasteQuery = _tasteQueries[preference.taste] ?? '';
 
     final groupQuery =
         _groupQueries[preference.group] ?? _groupQueries['Semua']!;
 
-    final userTokens = _tokens('$tasteQuery $tasteQuery $groupQuery');
+    final userTokens = _tokens('$tasteQuery $groupQuery');
 
     final userVector = _vector(userTokens, idf);
 
     final scored = <MenuRecommendation>[];
 
+    // Menghitung skor kemiripan setiap produk.
     for (final product in candidates) {
       final productVector = _vector(_productTokens(product), idf);
 
       final similarity = _cosine(userVector, productVector);
 
-      // Sedikit preferensi harga rendah di antara hasil dengan skor serupa.
+      // Memberikan sedikit bobot pada keterjangkauan harga.
       final budget = preference.maximumPrice;
 
       final affordability = budget == null || budget <= 0
@@ -174,15 +158,16 @@ class MenuRecommendationService {
 
       final score = 0.95 * similarity + 0.05 * affordability;
 
-      final reason = preference.taste == 'Apa saja'
-          ? 'Sesuai pilihan jenis menu dan anggaranmu.'
-          : 'Cocok dengan preferensi ${preference.taste.toLowerCase()} dan anggaranmu.';
+      final reason =
+          'Cocok dengan preferensi ${preference.taste.toLowerCase()} '
+          'dan anggaranmu.';
 
       scored.add(
         MenuRecommendation(product: product, score: score, reason: reason),
       );
     }
 
+    // Mengurutkan hasil berdasarkan skor tertinggi.
     scored.sort((a, b) {
       final byScore = b.score.compareTo(a.score);
 
@@ -196,6 +181,7 @@ class MenuRecommendationService {
     return scored.take(limit).toList(growable: false);
   }
 
+  /// Memeriksa kesesuaian kategori produk.
   bool _matchesGroup(OfficialProduct product, String group) {
     switch (group) {
       case 'Minuman':
@@ -212,6 +198,7 @@ class MenuRecommendationService {
     }
   }
 
+  /// Mengubah informasi produk menjadi kumpulan kata.
   List<String> _productTokens(OfficialProduct product) {
     final text = '${product.name} ${product.category} ${product.description}';
 
@@ -252,13 +239,16 @@ class MenuRecommendationService {
     return [..._tokens(text), ...extra, ...extra];
   }
 
-  List<String> _tokens(String text) =>
-      RegExp(r'[a-z0-9]+')
-          .allMatches(text.toLowerCase())
-          .map((match) => match.group(0)!)
-          .where((term) => term.length > 2 && !_stopWords.contains(term))
-          .toList(growable: false);
+  /// Memecah teks menjadi token.
+  List<String> _tokens(String text) {
+    return RegExp(r'[a-z0-9]+')
+        .allMatches(text.toLowerCase())
+        .map((match) => match.group(0)!)
+        .where((term) => term.length > 2 && !_stopWords.contains(term))
+        .toList(growable: false);
+  }
 
+  /// Menghitung bobot TF-IDF setiap token.
   Map<String, double> _vector(List<String> tokens, Map<String, double> idf) {
     if (tokens.isEmpty) return {};
 
@@ -278,6 +268,7 @@ class MenuRecommendationService {
     return weights;
   }
 
+  /// Menghitung Cosine Similarity antara dua vektor.
   double _cosine(Map<String, double> a, Map<String, double> b) {
     if (a.isEmpty || b.isEmpty) return 0;
 

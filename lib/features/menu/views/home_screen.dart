@@ -10,9 +10,9 @@ import '../viewmodels/menu_viewmodel.dart';
 
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 
-import 'package:tap_jaya_mobile/widgets/app_logo.dart';
+import 'package:tap_jaya_mobile/features/menu/widgets/app_logo.dart';
 
 import 'package:tap_jaya_mobile/features/cart/views/cart_screen.dart';
 
@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final TextEditingController searchController = TextEditingController();
 
-  final CartStore cartStore = CartStore.instance;
+  final CartViewModel cartViewModel = CartViewModel.instance;
 
   final MenuViewModel menuViewModel = MenuViewModel();
 
@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    cartStore.addListener(_refreshCart);
+    CartViewModel.instance.addListener(_refreshCart);
     menuViewModel.addListener(_refreshMenu);
 
     menuViewModel.loadProducts();
@@ -63,7 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    cartStore.removeListener(_refreshCart);
+    CartViewModel.instance.removeListener(_refreshCart);
     menuViewModel.removeListener(_refreshMenu);
     menuViewModel.dispose();
     searchController.dispose();
@@ -201,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
-    final int cartCount = cartStore.totalQuantity;
+    final int cartCount = CartViewModel.instance.totalQuantity;
 
     return Container(
       width: double.infinity,

@@ -1,11 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
-
-import '../models/cart_item.dart';
-
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 
 class CartItemEditScreen extends StatefulWidget {
   final String productName;
@@ -35,12 +34,12 @@ class CartItemEditScreen extends StatefulWidget {
   });
 
   @override
-  State<CartItemEditScreen> createState() => _CartItemEditScreenState();
+  State<CartItemEditScreen> createState() =>
+      _CartItemEditScreenState();
 }
 
 class _CartItemEditScreenState extends State<CartItemEditScreen> {
   late int quantity;
-
   late String selectedSize;
 
   late bool extraShot;
@@ -48,6 +47,8 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
   late bool lessSugar;
 
   late TextEditingController noteController;
+
+  final CartViewModel _cartViewModel = CartViewModel.instance;
 
   bool get supportsCustomization {
     return widget.productName == 'Kopi Susu Berjaya di Bali' ||
@@ -59,49 +60,41 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
     super.initState();
 
     quantity = widget.initialQuantity;
-
-    selectedSize = widget.initialSize.isNotEmpty ? widget.initialSize : 'Large';
+    selectedSize =
+        widget.initialSize.isNotEmpty ? widget.initialSize : 'Large';
 
     extraShot = widget.initialExtraShot;
     lessIce = widget.initialLessIce;
     lessSugar = widget.initialLessSugar;
 
-    noteController = TextEditingController(text: widget.initialNote);
+    noteController = TextEditingController(
+      text: widget.initialNote,
+    );
   }
 
   @override
   void dispose() {
     noteController.dispose();
-
     super.dispose();
   }
 
+  // Harga dasar produk.
   int get basePrice {
     if (widget.productName == 'Kopi Susu Berjaya di Bali') {
-      if (selectedSize == 'Regular') {
-        return 24545;
-      }
-
-      return 30000;
+      return selectedSize == 'Regular' ? 24545 : 30000;
     }
 
     return widget.unitPrice;
   }
 
+  // Harga tambahan.
   int get additionalPrice {
-    if (!supportsCustomization) {
-      return 0;
-    }
+    if (!supportsCustomization) return 0;
 
-    int total = 0;
-
-    if (extraShot) {
-      total += 5000;
-    }
-
-    return total;
+    return extraShot ? 5000 : 0;
   }
 
+  // Harga per produk.
   int get currentUnitPrice {
     if (supportsCustomization) {
       return basePrice + additionalPrice;
@@ -110,17 +103,21 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
     return widget.unitPrice;
   }
 
-  int get totalPrice {
-    return currentUnitPrice * quantity;
-  }
+  // Total harga.
+  int get totalPrice => currentUnitPrice * quantity;
 
+  // Format Rupiah.
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+    return 'Rp ${value.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    )}';
   }
 
+  // Membuat ID berdasarkan konfigurasi produk.
   String get updatedItemId {
     if (widget.productName == 'Kopi Susu Berjaya di Bali') {
-      final String note = noteController.text.trim();
+      final note = noteController.text.trim();
 
       return [
         'kopi-susu-berjaya-di-bali',
@@ -136,18 +133,33 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
         widget.productName.toLowerCase().replaceAll(' ', '-');
   }
 
+  // Menyimpan perubahan produk.
   void _saveChanges() {
-    /*
-      Mode lama dipertahankan sementara agar
-      file lain yang belum direvisi tetap aman.
-    */
-    if (widget.itemId == null) {
-      Navigator.pop(context, quantity);
+    if (quantity <= 0) return;
 
+    // Mode penambahan produk baru.
+    if (widget.itemId == null) {
+      final newItem = CartItem(
+        id: updatedItemId,
+        productName: widget.productName,
+        imagePath: widget.imagePath,
+        unitPrice: currentUnitPrice,
+        quantity: quantity,
+        size: supportsCustomization ? selectedSize : '',
+        extraShot: supportsCustomization && extraShot,
+        lessIce: supportsCustomization && lessIce,
+        lessSugar: supportsCustomization && lessSugar,
+        note: supportsCustomization ? noteController.text.trim() : '',
+      );
+
+      _cartViewModel.addItem(newItem);
+
+      Navigator.pop(context);
       return;
     }
 
-    final CartItem updatedItem = CartItem(
+    // Mode mengedit produk yang sudah ada.
+    final updatedItem = CartItem(
       id: updatedItemId,
       productName: widget.productName,
       imagePath: widget.imagePath,
@@ -160,7 +172,7 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       note: supportsCustomization ? noteController.text.trim() : '',
     );
 
-    CartStore.instance.updateItem(
+    _cartViewModel.updateItem(
       currentId: widget.itemId!,
       updatedItem: updatedItem,
     );
@@ -168,12 +180,11 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
     Navigator.pop(context);
   }
 
+  // Konfirmasi penghapusan produk.
   Future<void> _confirmDelete() async {
-    if (widget.itemId == null) {
-      return;
-    }
+    if (widget.itemId == null) return;
 
-    final bool? shouldDelete = await showDialog<bool>(
+    final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -190,7 +201,8 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
             ),
           ),
           content: Text(
-            'Apakah Anda yakin ingin menghapus ${widget.productName} dari keranjang?',
+            'Apakah Anda yakin ingin menghapus '
+            '${widget.productName} dari keranjang?',
             style: GoogleFonts.poppins(
               fontSize: 12,
               height: 1.5,
@@ -229,15 +241,11 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       },
     );
 
-    if (shouldDelete != true) {
-      return;
-    }
+    if (shouldDelete != true) return;
 
-    CartStore.instance.removeItem(widget.itemId!);
+    _cartViewModel.removeItem(widget.itemId!);
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     Navigator.pop(context);
   }
@@ -250,7 +258,6 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
         child: Column(
           children: [
             _buildHeader(),
-
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 30),
@@ -258,40 +265,27 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildProductImage(),
-
                     const SizedBox(height: 18),
-
                     _buildProductInformation(),
 
                     if (supportsCustomization) ...[
                       const SizedBox(height: 22),
-
                       _buildSizeSection(),
-
                       const SizedBox(height: 20),
-
                       _buildAdditionalSection(),
-
                       const SizedBox(height: 20),
-
                       _buildNoteSection(),
                     ],
 
                     const SizedBox(height: 22),
-
                     _buildQuantitySection(),
-
                     const SizedBox(height: 22),
-
                     _buildTotalSection(),
-
                     const SizedBox(height: 28),
-
                     _buildSaveButton(),
 
                     if (widget.itemId != null) ...[
                       const SizedBox(height: 12),
-
                       _buildDeleteButton(),
                     ],
                   ],
@@ -313,9 +307,7 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(
                 Icons.arrow_back,
                 size: 26,
@@ -323,7 +315,6 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
               ),
             ),
           ),
-
           Text(
             'Ubah Pesanan',
             style: GoogleFonts.poppins(
@@ -371,9 +362,7 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 5),
-
           Text(
             formatPrice(currentUnitPrice),
             style: GoogleFonts.poppins(
@@ -392,12 +381,13 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Pilih Ukuran*'),
-
         const SizedBox(height: 9),
-
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -410,9 +400,10 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
                 label: 'Regular (R)',
                 price: 'Rp 24.545',
               ),
-
-              const Divider(height: 10, color: Color(0xFFEEEAE6)),
-
+              const Divider(
+                height: 10,
+                color: Color(0xFFEEEAE6),
+              ),
               _sizeOption(
                 value: 'Large',
                 label: 'Large (L)',
@@ -430,7 +421,7 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
     required String label,
     required String price,
   }) {
-    final bool selected = selectedSize == value;
+    final selected = selectedSize == value;
 
     return InkWell(
       onTap: () {
@@ -443,24 +434,24 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
               size: 21,
               color: AppColors.dark,
             ),
-
             const SizedBox(width: 9),
-
             Expanded(
               child: Text(
                 label,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight:
+                      selected ? FontWeight.w600 : FontWeight.w400,
                   color: AppColors.dark,
                 ),
               ),
             ),
-
             Text(
               price,
               style: GoogleFonts.poppins(
@@ -480,12 +471,13 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Additional (Opsional)'),
-
         const SizedBox(height: 9),
-
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 14,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -498,31 +490,23 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
                 price: '+Rp 5.000',
                 value: extraShot,
                 onChanged: (value) {
-                  setState(() {
-                    extraShot = value;
-                  });
+                  setState(() => extraShot = value);
                 },
               ),
-
               _additionalOption(
                 label: 'Less Ice',
                 price: '+Rp 0',
                 value: lessIce,
                 onChanged: (value) {
-                  setState(() {
-                    lessIce = value;
-                  });
+                  setState(() => lessIce = value);
                 },
               ),
-
               _additionalOption(
                 label: 'Less Sugar',
                 price: '+Rp 0',
                 value: lessSugar,
                 onChanged: (value) {
-                  setState(() {
-                    lessSugar = value;
-                  });
+                  setState(() => lessSugar = value);
                 },
               ),
             ],
@@ -539,9 +523,7 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
     required ValueChanged<bool> onChanged,
   }) {
     return InkWell(
-      onTap: () {
-        onChanged(!value);
-      },
+      onTap: () => onChanged(!value),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 7),
         child: Row(
@@ -551,19 +533,22 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
               size: 21,
               color: AppColors.dark,
             ),
-
             const SizedBox(width: 9),
-
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: AppColors.dark,
+                ),
               ),
             ),
-
             Text(
               price,
-              style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                color: AppColors.dark,
+              ),
             ),
           ],
         ),
@@ -576,33 +561,38 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Catatan Pesanan'),
-
         const SizedBox(height: 9),
-
         TextField(
           controller: noteController,
           maxLines: 3,
-          onChanged: (_) {
-            setState(() {});
-          },
-          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
+          onChanged: (_) => setState(() {}),
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: AppColors.dark,
+          ),
           decoration: InputDecoration(
             hintText: 'Contoh: sedikit es, tanpa sedotan...',
-            hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.all(14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2DED9)),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE2DED9)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2DED9)),
+              borderSide:
+                  const BorderSide(color: Color(0xFFE2DED9)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.dark),
+              borderSide:
+                  const BorderSide(color: AppColors.dark),
             ),
           ),
         ),
@@ -615,12 +605,13 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _sectionTitle('Jumlah Pesanan'),
-
         const SizedBox(height: 9),
-
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -632,16 +623,10 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
                 icon: Icons.remove,
                 enabled: quantity > 1,
                 onTap: () {
-                  if (quantity <= 1) {
-                    return;
-                  }
-
-                  setState(() {
-                    quantity--;
-                  });
+                  if (quantity <= 1) return;
+                  setState(() => quantity--);
                 },
               ),
-
               Expanded(
                 child: Text(
                   '$quantity',
@@ -653,14 +638,11 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
                   ),
                 ),
               ),
-
               _quantityButton(
                 icon: Icons.add,
                 enabled: true,
                 onTap: () {
-                  setState(() {
-                    quantity++;
-                  });
+                  setState(() => quantity++);
                 },
               ),
             ],
@@ -687,18 +669,21 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
             children: [
               Text(
                 'Total',
-                style: GoogleFonts.poppins(fontSize: 11, color: AppColors.grey),
+                style: GoogleFonts.poppins(
+                  fontSize: 11,
+                  color: AppColors.grey,
+                ),
               ),
-
               const SizedBox(height: 2),
-
               Text(
                 '$quantity item',
-                style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  color: AppColors.grey,
+                ),
               ),
             ],
           ),
-
           Text(
             formatPrice(totalPrice),
             style: GoogleFonts.poppins(
@@ -728,7 +713,10 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
         ),
         child: Text(
           'Simpan Perubahan',
-          style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w600),
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -740,7 +728,11 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
       height: 50,
       child: OutlinedButton.icon(
         onPressed: _confirmDelete,
-        icon: const Icon(Icons.delete_outline, size: 20, color: AppColors.red),
+        icon: const Icon(
+          Icons.delete_outline,
+          size: 20,
+          color: AppColors.red,
+        ),
         label: Text(
           'Hapus dari Keranjang',
           style: GoogleFonts.poppins(
@@ -782,10 +774,15 @@ class _CartItemEditScreenState extends State<CartItemEditScreen> {
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: enabled ? const Color(0xFFF5EDE5) : const Color(0xFFF0F0F0),
+          color: enabled
+              ? const Color(0xFFF5EDE5)
+              : const Color(0xFFF0F0F0),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, color: enabled ? AppColors.dark : AppColors.grey),
+        child: Icon(
+          icon,
+          color: enabled ? AppColors.dark : AppColors.grey,
+        ),
       ),
     );
   }
