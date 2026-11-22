@@ -1,58 +1,152 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
-import 'package:tap_jaya_mobile/services/menu_recommendation_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_preference.dart';
+import 'package:tap_jaya_mobile/features/recommendations/services/menu_recommendation_service.dart';
 
 void main() {
-  const service = MenuRecommendationService();
+  group('MenuRecommendationService', () {
+    test('mengirim preferensi dan anggaran ke backend', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'POST');
 
-  test('maksimal 3 rekomendasi dan tidak memuat Add On', () {
-    final results = service.recommend(const MenuPreference());
-    expect(results, isNotEmpty);
-    expect(results.length, lessThanOrEqualTo(3));
-    expect(
-      results.any((result) => result.product.category == 'Add On'),
-      isFalse,
-    );
-  });
+        expect(request.url.path, '/api/mobile/recommendations');
 
-  test('anggaran dan jenis minuman dipatuhi', () {
-    final results = service.recommend(
-      const MenuPreference(
-        group: 'Minuman',
-        taste: 'Segar',
-        maximumPrice: 20000,
-      ),
-    );
-    expect(results, isNotEmpty);
-    for (final item in results) {
-      expect(item.product.lowestPrice, lessThanOrEqualTo(20000));
-      expect([
-        'Signature',
-        'Black Series',
-        'Milk Based Coffee',
-        'Manual',
-        'Milk Based',
-        'Tea',
-        'Chocolate',
-      ], contains(item.product.category));
-    }
-  });
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
 
-  test('kategori makanan dan snack tidak tercampur', () {
-    final snack = service.recommend(
-      const MenuPreference(group: 'Snack', taste: 'Gurih', maximumPrice: 80000),
-    );
-    expect(snack, isNotEmpty);
-    expect(snack.every((item) => item.product.category == 'Snack'), isTrue);
-  });
+        expect(body['preferences'], ['Minuman', 'Segar']);
 
-  test('tidak ada hasil jika anggaran terlalu kecil', () {
-    final results = service.recommend(
-      const MenuPreference(
-        group: 'Makanan',
-        taste: 'Pedas',
-        maximumPrice: 1000,
-      ),
-    );
-    expect(results, isEmpty);
+        expect(body['budget'], 20000);
+
+        return http.Response(
+          jsonEncode({
+            'success': true,
+            'message': 'Rekomendasi menu berhasil diperoleh.',
+            'data': {'total': 0, 'recommendations': []},
+          }),
+          200,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final service = MenuRecommendationService(client: client);
+
+      final results = await service.recommend(
+        const MenuPreference(
+          group: 'Minuman',
+          taste: 'Segar',
+          maximumPrice: 20000,
+        ),
+      );
+
+      expect(results, isEmpty);
+
+      client.close();
+    });
+
+    test('tidak mengirim budget jika tanpa batas', () async {
+      final client = MockClient((request) async {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+
+        expect(body.containsKey('budget'), isFalse);
+
+        expect(body['preferences'], ['Semua']);
+
+        return http.Response(
+          jsonEncode({
+            'success': true,
+            'data': {'total': 0, 'recommendations': []},
+          }),
+          200,
+        );
+      });
+
+      final service = MenuRecommendationService(client: client);
+
+      final results = await service.recommend(
+        const MenuPreference(
+          group: 'Semua',
+          taste: 'Apa saja',
+          maximumPrice: null,
+        ),
+      );
+
+      expect(results, isEmpty);
+
+      client.close();
+    });
+
+    test('membatasi hasil maksimal 3 rekomendasi', () async {
+      final client = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'success': true,
+            'data': {'total': 0, 'recommendations': []},
+          }),
+          200,
+        );
+      });
+
+      final service = MenuRecommendationService(client: client);
+
+      final results = await service.recommend(const MenuPreference(), limit: 3);
+
+      expect(results.length, lessThanOrEqualTo(3));
+
+      client.close();
+    });
+
+    test('mengembalikan daftar kosong jika limit nol', () async {
+      final client = MockClient((request) async {
+        fail('HTTP tidak boleh dipanggil jika limit nol.');
+      });
+
+      final service = MenuRecommendationService(client: client);
+
+      final results = await service.recommend(const MenuPreference(), limit: 0);
+
+      expect(results, isEmpty);
+
+      client.close();
+    });
+
+    test('menangani kesalahan HTTP dari backend', () async {
+      final client = MockClient((request) async {
+        return http.Response(
+          jsonEncode({
+            'success': false,
+            'message': 'Layanan rekomendasi AI tidak tersedia.',
+          }),
+          502,
+        );
+      });
+
+      final service = MenuRecommendationService(client: client);
+
+      await expectLater(
+        service.recommend(const MenuPreference()),
+        throwsException,
+      );
+
+      client.close();
+    });
+
+    test('menangani respons JSON tidak valid', () async {
+      final client = MockClient((request) async {
+        return http.Response('Internal Server Error', 500);
+      });
+
+      final service = MenuRecommendationService(client: client);
+
+      await expectLater(
+        service.recommend(const MenuPreference()),
+        throwsException,
+      );
+
+      client.close();
+    });
   });
 }

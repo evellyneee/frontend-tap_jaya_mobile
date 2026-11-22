@@ -1,7 +1,7 @@
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-
 import 'package:tap_jaya_mobile/core/config/api_config.dart';
 
 class ApiClient {
@@ -21,17 +21,24 @@ class ApiClient {
           )
           .timeout(ApiConfig.connectionTimeout);
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300) {
+        throw Exception(
+          'HTTP ${response.statusCode}: ${response.body}',
+        );
       }
 
       final decoded = jsonDecode(response.body);
 
       if (decoded is! Map<String, dynamic>) {
-        throw const FormatException('Format respons API tidak valid.');
+        throw const FormatException(
+          'Format respons API tidak valid.',
+        );
       }
 
       return decoded;
+    } on FormatException {
+      rethrow;
     } catch (error) {
       throw Exception('Gagal menghubungi API: $error');
     }

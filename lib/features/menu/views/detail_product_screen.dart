@@ -1,60 +1,209 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
-
 import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
-
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
+
+// =====================================
+// MODEL ADD-ON SEMENTARA
+// =====================================
+
+class _ProductAddon {
+  final int id;
+  final String name;
+  final int price;
+
+  const _ProductAddon({
+    required this.id,
+    required this.name,
+    required this.price,
+  });
+}
+
+// =====================================
+// DETAIL PRODUCT SCREEN
+// =====================================
 
 class DetailProductScreen extends StatefulWidget {
   final ValueChanged<int>? onAddToCart;
 
-  const DetailProductScreen({super.key, this.onAddToCart});
+  const DetailProductScreen({
+    super.key,
+    this.onAddToCart,
+  });
 
   @override
-  State<DetailProductScreen> createState() => _DetailProductScreenState();
+  State<DetailProductScreen> createState() =>
+      _DetailProductScreenState();
 }
 
-class _DetailProductScreenState extends State<DetailProductScreen> {
+class _DetailProductScreenState
+    extends State<DetailProductScreen> {
+  // =====================================
+  // IDENTITAS PRODUK
+  // =====================================
+
+  static const int productId = 12;
+
+  static const String productName =
+      'Kopi Susu Berjaya di Bali';
+
+  static const String productImage =
+      'assets/images/kopi_susu_bali.png';
+
+  // =====================================
+  // HARGA SEMENTARA
+  // =====================================
+
+  // Sesuaikan dengan products.price dan
+  // products.price_large di MySQL.
+  //
+  // Harga ini belum diambil dari API.
+
+  static const int regularPrice = 24545;
+  static const int largePrice = 30000;
+
+  // =====================================
+  // ADD-ON SEMENTARA
+  // =====================================
+
+  // ID dan harga wajib diverifikasi terhadap
+  // product_addons dan product_addon_options.
+  //
+  // Jangan menganggap daftar ini sebagai
+  // data yang sudah dibaca dari database.
+
+  static const List<_ProductAddon> availableAddons = [
+    _ProductAddon(
+      id: 1,
+      name: 'Extra Shot Espresso',
+      price: 5000,
+    ),
+    _ProductAddon(
+      id: 3,
+      name: 'Caramel Syrup',
+      price: 3000,
+    ),
+    _ProductAddon(
+      id: 4,
+      name: 'Vanilla Syrup',
+      price: 3000,
+    ),
+    _ProductAddon(
+      id: 5,
+      name: 'Hazelnut Syrup',
+      price: 3000,
+    ),
+  ];
+
+  // =====================================
+  // STATE PRODUK
+  // =====================================
+
   String selectedSize = 'Large';
-  bool extraShot = false;
+
+  final Set<int> selectedAddonIds = <int>{};
+
   bool lessIce = false;
   bool lessSugar = true;
+
   int quantity = 1;
 
-  final TextEditingController noteController = TextEditingController();
+  final TextEditingController noteController =
+      TextEditingController();
 
-  int get basePrice => selectedSize == 'Regular' ? 24545 : 30000;
+  // =====================================
+  // HARGA
+  // =====================================
 
-  int get additionalPrice => extraShot ? 5000 : 0;
+  int get basePrice {
+    switch (selectedSize) {
+      case 'Large':
+        return largePrice;
+      case 'Regular':
+      default:
+        return regularPrice;
+    }
+  }
 
-  int get unitPrice => basePrice + additionalPrice;
+  int get addonTotal {
+    int total = 0;
+
+    for (final addon in availableAddons) {
+      if (selectedAddonIds.contains(addon.id)) {
+        total += addon.price;
+      }
+    }
+
+    return total;
+  }
+
+  int get unitPrice => basePrice + addonTotal;
 
   int get totalPrice => unitPrice * quantity;
 
-  String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+  // =====================================
+  // EXTRA SHOT
+  // =====================================
+
+  bool get extraShot {
+    return availableAddons.any(
+      (addon) =>
+          addon.name == 'Extra Shot Espresso' &&
+          selectedAddonIds.contains(addon.id),
+    );
   }
 
-  String get cartItemId => [
-    'kopi-susu-berjaya-di-bali',
-    selectedSize,
-    extraShot ? 'extra-shot' : 'no-extra-shot',
-    lessIce ? 'less-ice' : 'normal-ice',
-    lessSugar ? 'less-sugar' : 'normal-sugar',
-    noteController.text.trim(),
-  ].join('|');
+  // =====================================
+  // FORMAT HARGA
+  // =====================================
+
+  String formatPrice(int value) {
+    final formatted = value.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (match) => '${match[1]}.',
+        );
+
+    return 'Rp $formatted';
+  }
+
+  // =====================================
+  // ID UNIK KERANJANG
+  // =====================================
+
+  String get cartItemId {
+    final addonIds = selectedAddonIds.toList()..sort();
+
+    return [
+      productId.toString(),
+      selectedSize,
+      addonIds.join(','),
+      extraShot ? 'extra-shot' : 'no-extra-shot',
+      lessIce ? 'less-ice' : 'normal-ice',
+      lessSugar ? 'less-sugar' : 'normal-sugar',
+      noteController.text.trim(),
+    ].join('|');
+  }
+
+  // =====================================
+  // BUAT CART ITEM
+  // =====================================
 
   CartItem createOrderItem() {
+    final addonIds = selectedAddonIds.toList()..sort();
+
     return CartItem(
       id: cartItemId,
-      productName: 'Kopi Susu Berjaya di Bali',
-      imagePath: 'assets/images/kopi_susu_bali.png',
+      productId: productId,
+      productName: productName,
+      imagePath: productImage,
       unitPrice: unitPrice,
       quantity: quantity,
       size: selectedSize,
+      addonIds: addonIds,
       extraShot: extraShot,
       lessIce: lessIce,
       lessSugar: lessSugar,
@@ -62,8 +211,15 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // TAMBAH KE KERANJANG
+  // =====================================
+
   void addToCart() {
-    CartStore.instance.addItem(createOrderItem());
+    final item = createOrderItem();
+
+    CartViewModel.instance.addItem(item);
+
     widget.onAddToCart?.call(quantity);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -72,29 +228,46 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         duration: const Duration(seconds: 2),
         content: Text(
           '$quantity item berhasil ditambahkan ke keranjang',
-          style: GoogleFonts.poppins(color: Colors.white, fontSize: 12),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 12,
+          ),
         ),
       ),
     );
   }
 
+  // =====================================
+  // BELI SEKARANG
+  // =====================================
+
   void buyNow() {
-    final CartItem item = createOrderItem();
+    final item = createOrderItem();
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            OrderScreen(subtotal: totalPrice, orderItems: [item]),
+        builder: (context) => OrderScreen(
+          subtotal: totalPrice,
+          orderItems: [item],
+        ),
       ),
     );
   }
+
+  // =====================================
+  // DISPOSE
+  // =====================================
 
   @override
   void dispose() {
     noteController.dispose();
     super.dispose();
   }
+
+  // =====================================
+  // BUILD
+  // =====================================
 
   @override
   Widget build(BuildContext context) {
@@ -106,9 +279,15 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             _buildHeader(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  20,
+                  8,
+                  20,
+                  24,
+                ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     _buildProductImage(),
                     const SizedBox(height: 20),
@@ -132,6 +311,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
       ),
     );
   }
+
+  // =====================================
+  // HEADER
+  // =====================================
 
   Widget _buildHeader() {
     return SizedBox(
@@ -163,12 +346,16 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // GAMBAR PRODUK
+  // =====================================
+
   Widget _buildProductImage() {
     return Center(
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: Image.asset(
-          'assets/images/kopi_susu_bali.png',
+          productImage,
           width: 185,
           height: 185,
           fit: BoxFit.cover,
@@ -177,6 +364,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // INFORMASI PRODUK
+  // =====================================
+
   Widget _buildProductInfo() {
     return Container(
       width: double.infinity,
@@ -184,13 +375,15 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE5E0DB)),
+        border: Border.all(
+          color: const Color(0xFFE5E0DB),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Kopi Susu Berjaya di Bali',
+            productName,
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -208,7 +401,9 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Perpaduan espresso mantap, susu creamy, dan gula aren khas Bali dengan cita rasa manis yang pas.',
+            'Perpaduan espresso mantap, susu creamy, '
+            'dan gula aren khas Bali dengan cita rasa '
+            'manis yang pas.',
             style: GoogleFonts.poppins(
               fontSize: 12,
               height: 1.4,
@@ -219,6 +414,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
       ),
     );
   }
+
+  // =====================================
+  // PILIH UKURAN
+  // =====================================
 
   Widget _buildSizeSection() {
     return Column(
@@ -235,23 +434,28 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E0DB)),
+            border: Border.all(
+              color: const Color(0xFFE5E0DB),
+            ),
           ),
           child: Column(
             children: [
               _buildSizeOption(
                 value: 'Regular',
                 label: 'Regular (R)',
-                price: 'Rp 24.545',
+                price: formatPrice(regularPrice),
               ),
               _buildSizeOption(
                 value: 'Large',
                 label: 'Large (L)',
-                price: 'Rp 30.000',
+                price: formatPrice(largePrice),
               ),
             ],
           ),
@@ -260,12 +464,16 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // PILIHAN UKURAN
+  // =====================================
+
   Widget _buildSizeOption({
     required String value,
     required String label,
     required String price,
   }) {
-    final bool selected = selectedSize == value;
+    final selected = selectedSize == value;
 
     return InkWell(
       onTap: () {
@@ -274,11 +482,15 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         });
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          vertical: 4,
+        ),
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected
+                  ? Icons.radio_button_checked
+                  : Icons.radio_button_off,
               size: 20,
               color: AppColors.dark,
             ),
@@ -288,7 +500,9 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                 label,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: selected
+                      ? FontWeight.w600
+                      : FontWeight.w400,
                   color: AppColors.dark,
                 ),
               ),
@@ -307,6 +521,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // PILIHAN ADD-ON
+  // =====================================
+
   Widget _buildAdditionalSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,23 +540,39 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 8,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E0DB)),
+            border: Border.all(
+              color: const Color(0xFFE5E0DB),
+            ),
           ),
           child: Column(
             children: [
-              _buildAdditionalOption(
-                label: 'Extra Shot Espresso',
-                price: '+Rp 5.000',
-                value: extraShot,
-                onChanged: (value) {
-                  setState(() {
-                    extraShot = value;
-                  });
-                },
+              for (final addon in availableAddons)
+                _buildAdditionalOption(
+                  label: addon.name,
+                  price:
+                      '+${formatPrice(addon.price)}',
+                  value: selectedAddonIds.contains(
+                    addon.id,
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      if (value) {
+                        selectedAddonIds.add(addon.id);
+                      } else {
+                        selectedAddonIds.remove(addon.id);
+                      }
+                    });
+                  },
+                ),
+              const Divider(
+                color: Color(0xFFE5E0DB),
               ),
               _buildAdditionalOption(
                 label: 'Less Ice',
@@ -367,6 +601,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // OPSI TAMBAHAN
+  // =====================================
+
   Widget _buildAdditionalOption({
     required String label,
     required String price,
@@ -376,11 +614,15 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     return InkWell(
       onTap: () => onChanged(!value),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(
+          vertical: 6,
+        ),
         child: Row(
           children: [
             Icon(
-              value ? Icons.check_box : Icons.check_box_outline_blank,
+              value
+                  ? Icons.check_box
+                  : Icons.check_box_outline_blank,
               size: 20,
               color: AppColors.dark,
             ),
@@ -388,18 +630,28 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             Expanded(
               child: Text(
                 label,
-                style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  color: AppColors.dark,
+                ),
               ),
             ),
             Text(
               price,
-              style: GoogleFonts.poppins(fontSize: 12, color: AppColors.dark),
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color: AppColors.dark,
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  // =====================================
+  // CATATAN PESANAN
+  // =====================================
 
   Widget _buildNoteSection() {
     return Column(
@@ -416,27 +668,45 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: noteController,
-          style: GoogleFonts.poppins(fontSize: 11, color: AppColors.dark),
+          maxLength: 1000,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: AppColors.dark,
+          ),
           decoration: InputDecoration(
-            hintText: 'Tambah catatan pesanan (misal: sedikit es)...',
-            hintStyle: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+            hintText:
+                'Tambah catatan pesanan (misal: sedikit es)...',
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 10,
+              color: AppColors.grey,
+            ),
             filled: true,
             fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(
+            contentPadding:
+                const EdgeInsets.symmetric(
               horizontal: 14,
               vertical: 12,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E0DB),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE5E0DB)),
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E0DB),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.dark),
+              borderRadius:
+                  BorderRadius.circular(10),
+              borderSide: const BorderSide(
+                color: AppColors.dark,
+              ),
             ),
           ),
         ),
@@ -444,9 +714,14 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // TOTAL HARGA
+  // =====================================
+
   Widget _buildTotal() {
     return Text(
-      'Total: ${formatPrice(totalPrice)} ($quantity Item)',
+      'Total: ${formatPrice(totalPrice)} '
+      '($quantity Item)',
       style: GoogleFonts.poppins(
         fontSize: 16,
         fontWeight: FontWeight.w600,
@@ -455,16 +730,24 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
     );
   }
 
+  // =====================================
+  // TOMBOL AKSI
+  // =====================================
+
   Widget _buildBottomActions() {
     return Row(
       children: [
         Container(
           height: 46,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 10,
+          ),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(9),
-            border: Border.all(color: const Color(0xFFD8D3CE)),
+            border: Border.all(
+              color: const Color(0xFFD8D3CE),
+            ),
           ),
           child: Row(
             children: [
@@ -476,7 +759,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                     });
                   }
                 },
-                child: const Icon(Icons.remove_circle_outline, size: 21),
+                child: const Icon(
+                  Icons.remove_circle_outline,
+                  size: 21,
+                ),
               ),
               const SizedBox(width: 7),
               Text(
@@ -493,7 +779,10 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                     quantity++;
                   });
                 },
-                child: const Icon(Icons.add_circle_outline, size: 21),
+                child: const Icon(
+                  Icons.add_circle_outline,
+                  size: 21,
+                ),
               ),
             ],
           ),
@@ -507,15 +796,23 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
             style: OutlinedButton.styleFrom(
               padding: EdgeInsets.zero,
               backgroundColor: Colors.white,
-              side: const BorderSide(color: Color(0xFFD8D3CE)),
+              side: const BorderSide(
+                color: Color(0xFFD8D3CE),
+              ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(9),
+                borderRadius:
+                    BorderRadius.circular(9),
               ),
             ),
             child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment:
+                  MainAxisAlignment.center,
               children: [
-                Icon(Icons.add, size: 23, color: AppColors.dark),
+                Icon(
+                  Icons.add,
+                  size: 23,
+                  color: AppColors.dark,
+                ),
                 SizedBox(width: 3),
                 Icon(
                   Icons.shopping_cart_outlined,
@@ -536,9 +833,13 @@ class _DetailProductScreenState extends State<DetailProductScreen> {
                 backgroundColor: AppColors.dark,
                 foregroundColor: Colors.white,
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding:
+                    const EdgeInsets.symmetric(
+                  horizontal: 8,
+                ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(9),
+                  borderRadius:
+                      BorderRadius.circular(9),
                 ),
               ),
               child: Text(

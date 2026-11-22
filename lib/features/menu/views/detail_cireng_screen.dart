@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
 
 import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
 
 import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
 
@@ -61,7 +61,7 @@ class _DetailCirengScreenState extends State<DetailCirengScreen> {
   }
 
   void addToCart() {
-    CartStore.instance.addItem(createOrderItem());
+    CartViewModel.instance.addItem(createOrderItem());
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

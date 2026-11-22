@@ -1,19 +1,15 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tap_jaya_mobile/features/menu/views/detail_official_screen.dart';
-
 import 'package:tap_jaya_mobile/features/menu/models/official_menu_catalog.dart';
-
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
+import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_viewmodel.dart';
+import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
 
 import '../models/cart_item.dart';
-
-import 'package:tap_jaya_mobile/features/cart/viewmodels/cart_store.dart';
-
 import 'cart_item_edit_screen.dart';
-
-import 'package:tap_jaya_mobile/features/orders/views/order_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -23,13 +19,13 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final CartStore cartStore = CartStore.instance;
+  final CartViewModel cartViewModel = CartViewModel.instance;
 
   @override
   void initState() {
     super.initState();
 
-    cartStore.addListener(_refreshCart);
+    cartViewModel.addListener(_refreshCart);
   }
 
   void _refreshCart() {
@@ -42,18 +38,22 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   void dispose() {
-    cartStore.removeListener(_refreshCart);
+    cartViewModel.removeListener(_refreshCart);
 
     super.dispose();
   }
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+    return 'Rp ${value.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    )}';
   }
 
   Future<void> _editItem(CartItem item) async {
     if (item.id.startsWith('official|')) {
       final menu = OfficialMenuCatalog.byName(item.productName);
+
       if (menu != null) {
         await Navigator.push(
           context,
@@ -62,9 +62,11 @@ class _CartScreenState extends State<CartScreen> {
                 DetailOfficialScreen(menu: menu, editingItem: item),
           ),
         );
+
         return;
       }
     }
+
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -74,7 +76,7 @@ class _CartScreenState extends State<CartScreen> {
           unitPrice: item.unitPrice,
           initialQuantity: item.quantity,
 
-          // Data realtime item yang sedang diedit
+          // Data realtime item yang sedang diedit.
           itemId: item.id,
           initialSize: item.size,
           initialExtraShot: item.extraShot,
@@ -87,14 +89,15 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _goToOrder() {
-    if (cartStore.selectedQuantity == 0) {
+    if (cartViewModel.selectedQuantity == 0) {
       return;
     }
 
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OrderScreen(subtotal: cartStore.selectedTotal),
+        builder: (context) =>
+            OrderScreen(subtotal: cartViewModel.selectedTotal),
       ),
     );
   }
@@ -109,7 +112,9 @@ class _CartScreenState extends State<CartScreen> {
             _buildHeader(),
 
             Expanded(
-              child: cartStore.isEmpty ? _buildEmptyCart() : _buildCartList(),
+              child: cartViewModel.isEmpty
+                  ? _buildEmptyCart()
+                  : _buildCartList(),
             ),
 
             _buildBottomCheckout(),
@@ -131,12 +136,15 @@ class _CartScreenState extends State<CartScreen> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              icon: const Icon(Icons.arrow_back, color: AppColors.dark),
+              icon: const Icon(
+                Icons.arrow_back,
+                color: AppColors.dark,
+              ),
             ),
           ),
 
           Text(
-            'Keranjang Saya (${cartStore.itemCount})',
+            'Keranjang Saya (${cartViewModel.itemCount})',
             style: GoogleFonts.poppins(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -193,12 +201,12 @@ class _CartScreenState extends State<CartScreen> {
   Widget _buildCartList() {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(18, 10, 18, 18),
-      itemCount: cartStore.items.length,
+      itemCount: cartViewModel.items.length,
       separatorBuilder: (context, index) {
         return const SizedBox(height: 14);
       },
       itemBuilder: (context, index) {
-        final CartItem item = cartStore.items[index];
+        final CartItem item = cartViewModel.items[index];
 
         return _buildCartItem(item);
       },
@@ -222,7 +230,10 @@ class _CartScreenState extends State<CartScreen> {
               value: item.isSelected,
               activeColor: AppColors.dark,
               onChanged: (value) {
-                cartStore.toggleItem(item.id, value ?? false);
+                cartViewModel.toggleItem(
+                  item.id,
+                  value ?? false,
+                );
               },
             ),
           ),
@@ -305,7 +316,8 @@ class _CartScreenState extends State<CartScreen> {
                             vertical: 4,
                           ),
                           minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          tapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                         child: Text(
                           'Ubah',
@@ -362,25 +374,28 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Widget _buildBottomCheckout() {
-    final bool canCheckout = cartStore.selectedQuantity > 0;
+    final bool canCheckout =
+        cartViewModel.selectedQuantity > 0;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 12, 18, 12),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE7E3DF))),
+        border: Border(
+          top: BorderSide(color: Color(0xFFE7E3DF)),
+        ),
       ),
       child: SafeArea(
         top: false,
         child: Row(
           children: [
             Checkbox(
-              value: cartStore.allSelected,
+              value: cartViewModel.allSelected,
               activeColor: AppColors.dark,
-              onChanged: cartStore.isEmpty
+              onChanged: cartViewModel.isEmpty
                   ? null
                   : (value) {
-                      cartStore.selectAll(value ?? false);
+                      cartViewModel.selectAll(value ?? false);
                     },
             ),
 
@@ -388,7 +403,9 @@ class _CartScreenState extends State<CartScreen> {
               'Semua',
               style: GoogleFonts.poppins(
                 fontSize: 11,
-                color: cartStore.isEmpty ? AppColors.grey : AppColors.dark,
+                color: cartViewModel.isEmpty
+                    ? AppColors.grey
+                    : AppColors.dark,
               ),
             ),
 
@@ -407,7 +424,7 @@ class _CartScreenState extends State<CartScreen> {
                 ),
 
                 Text(
-                  formatPrice(cartStore.selectedTotal),
+                  formatPrice(cartViewModel.selectedTotal),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -434,7 +451,7 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                 ),
                 child: Text(
-                  'Checkout (${cartStore.selectedQuantity})',
+                  'Checkout (${cartViewModel.selectedQuantity})',
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
