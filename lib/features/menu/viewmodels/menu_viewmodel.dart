@@ -1,19 +1,24 @@
+
 import 'package:flutter/foundation.dart';
 
+import '../models/customer_product.dart';
 import '../repositories/menu_repository.dart';
 
 class MenuViewModel extends ChangeNotifier {
   final MenuRepository _repository;
 
-  MenuViewModel({MenuRepository? repository})
-    : _repository = repository ?? const MenuRepository();
+  MenuViewModel({
+    MenuRepository? repository,
+  }) : _repository = repository ?? const MenuRepository();
 
-  List<Map<String, String>> _products = [];
+  // WAJIB CustomerProduct, bukan Map<String, String>
+  List<CustomerProduct> _products = [];
 
   bool _isLoading = false;
   String? _errorMessage;
 
-  List<Map<String, String>> get products => List.unmodifiable(_products);
+  List<CustomerProduct> get products =>
+      List.unmodifiable(_products);
 
   bool get isLoading => _isLoading;
 
@@ -29,7 +34,9 @@ class MenuViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final result = await _repository.getProducts();
+      final List<CustomerProduct> result =
+          await _repository.getProducts();
+
       _products = result;
     } catch (error) {
       _errorMessage = error.toString();

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
-
 import 'package:tap_jaya_mobile/features/cart/models/cart_item.dart';
 
 import 'payment_simulation_screen.dart';
@@ -27,18 +26,22 @@ class CustomerInformationScreen extends StatefulWidget {
 }
 
 class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
-  final TextEditingController nameController = TextEditingController();
-
-  final TextEditingController emailController = TextEditingController();
-
-  final TextEditingController tableController = TextEditingController();
+  final nameController = TextEditingController();
+  final emailController = TextEditingController();
+  final tableController = TextEditingController();
 
   String selectedPayment = 'online';
-
   bool agreeTerms = false;
   bool cashierConfirmation = false;
+  bool isNavigating = false;
 
-  bool get isDineIn => widget.orderType == 'Makan di Tempat';
+  bool get isDineIn {
+    final value = widget.orderType.trim().toLowerCase();
+
+    return value == 'makan di tempat' ||
+        value == 'dine-in' ||
+        value == 'dinein';
+  }
 
   @override
   void dispose() {
@@ -49,83 +52,130 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
   }
 
   String formatPrice(int value) {
-    return 'Rp ${value.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+    final formatted = value.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (match) => '${match[1]}.',
+    );
+
+    return 'Rp $formatted';
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.warmWhite,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildLabel('Nama Lengkap*'),
-                    const SizedBox(height: 7),
-                    _buildTextField(
-                      controller: nameController,
-                      hintText: 'Masukkan nama lengkap',
-                      icon: Icons.person_outline,
-                    ),
+  void _showMessage(String message) {
+    if (!mounted) return;
 
-                    const SizedBox(height: 16),
-                    _buildLabel('Email Customer*'),
-                    const SizedBox(height: 7),
-                    _buildTextField(
-                      controller: emailController,
-                      hintText: 'Masukkan email',
-                      icon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-
-                    if (isDineIn) ...[
-                      const SizedBox(height: 16),
-                      _buildLabel('Nomor Meja*'),
-                      const SizedBox(height: 7),
-                      _buildTextField(
-                        controller: tableController,
-                        hintText: 'Contoh: 12',
-                        icon: Icons.table_restaurant_outlined,
-                      ),
-                    ],
-
-                    const SizedBox(height: 22),
-                    _buildLabel('Anda memesan di'),
-                    const SizedBox(height: 8),
-                    _buildStoreLocation(),
-
-                    const SizedBox(height: 24),
-                    _buildLabel('Metode Pembayaran'),
-                    const SizedBox(height: 9),
-                    _buildPaymentSelector(),
-
-                    const SizedBox(height: 24),
-                    _buildLabel('Selesaikan Pembayaran'),
-                    const SizedBox(height: 9),
-
-                    if (selectedPayment == 'online')
-                      _buildOnlinePayment()
-                    else
-                      _buildCashierPayment(),
-
-                    const SizedBox(height: 14),
-                    _buildTerms(),
-                  ],
-                ),
-              ),
-            ),
-            _buildBottomSection(),
-          ],
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppColors.dark,
+        content: Text(
+          message,
+          style: GoogleFonts.poppins(fontSize: 10, color: Colors.white),
         ),
       ),
     );
   }
+
+  // ============================================================
+  // VALIDASI INFORMASI PELANGGAN
+  //
+  // Perbaikan:
+  // Halaman ini tidak lagi menolak productId yang kosong.
+  // Pencarian dan validasi ID MySQL dilakukan oleh
+  // CheckoutRepository sebelum pesanan dikirim ke backend.
+  // ============================================================
+
+  void _validatePayment() {
+    if (isNavigating) return;
+
+    final name = nameController.text.trim();
+    final email = emailController.text.trim();
+    final table = tableController.text.trim();
+
+    if (name.isEmpty || email.isEmpty) {
+      _showMessage('Lengkapi informasi pelanggan terlebih dahulu.');
+      return;
+    }
+
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _showMessage('Alamat email tidak valid.');
+      return;
+    }
+
+    if (name.length > 100) {
+      _showMessage('Nama maksimal 100 karakter.');
+      return;
+    }
+
+    if (isDineIn && table.isEmpty) {
+      _showMessage('Masukkan nomor meja terlebih dahulu.');
+      return;
+    }
+
+    if (table.length > 20) {
+      _showMessage('Nomor meja maksimal 20 karakter.');
+      return;
+    }
+
+    if (!agreeTerms) {
+      _showMessage('Setujui syarat dan kebijakan privasi terlebih dahulu.');
+      return;
+    }
+
+    if (selectedPayment == 'cashier' && !cashierConfirmation) {
+      _showMessage('Centang konfirmasi pembayaran di kasir.');
+      return;
+    }
+
+    if (widget.orderItems.isEmpty) {
+      _showMessage('Pesanan masih kosong.');
+      return;
+    }
+
+    // Pemeriksaan productId dihapus dari halaman ini.
+    //
+    // Alasannya:
+    // CartItem lama mungkin belum memiliki productId.
+    // CheckoutRepository akan mencoba mencari ID MySQL
+    // berdasarkan nama produk melalui API /mobile/products.
+    //
+    // Pemeriksaan jumlah tetap dilakukan di sini.
+
+    for (final item in widget.orderItems) {
+      if (item.quantity <= 0) {
+        _showMessage('Jumlah produk ${item.productName} tidak valid.');
+        return;
+      }
+    }
+
+    setState(() {
+      isNavigating = true;
+    });
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PaymentSimulationScreen(
+          paymentMethod: selectedPayment,
+          customerName: name,
+          customerEmail: email,
+          orderType: isDineIn ? 'Dine-in' : 'Takeaway',
+          tableNumber: isDineIn ? table : '',
+          totalPayment: widget.totalPayment,
+          orderItems: List<CartItem>.from(widget.orderItems),
+          isCartCheckout: widget.isCartCheckout,
+        ),
+      ),
+    ).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          isNavigating = false;
+        });
+      }
+    });
+  }
+
+  // ============================================================
+  // HEADER
+  // ============================================================
 
   Widget _buildHeader() {
     return SizedBox(
@@ -136,9 +186,7 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
           Align(
             alignment: Alignment.centerLeft,
             child: IconButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+              onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back, color: AppColors.dark),
             ),
           ),
@@ -155,6 +203,10 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
     );
   }
 
+  // ============================================================
+  // LABEL
+  // ============================================================
+
   Widget _buildLabel(String text) {
     return Text(
       text,
@@ -165,6 +217,10 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
       ),
     );
   }
+
+  // ============================================================
+  // INPUT PELANGGAN
+  // ============================================================
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -201,6 +257,10 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
       ),
     );
   }
+
+  // ============================================================
+  // LOKASI TOKO
+  // ============================================================
 
   Widget _buildStoreLocation() {
     return Container(
@@ -252,24 +312,12 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
     );
   }
 
-  Widget _buildPaymentSelector() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1ECE7),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          _buildPaymentButton(value: 'online', title: 'Pembayaran Online'),
-          _buildPaymentButton(value: 'cashier', title: 'Bayar di Kasir'),
-        ],
-      ),
-    );
-  }
+  // ============================================================
+  // TOMBOL PILIHAN PEMBAYARAN
+  // ============================================================
 
   Widget _buildPaymentButton({required String value, required String title}) {
-    final bool active = selectedPayment == value;
+    final active = selectedPayment == value;
 
     return Expanded(
       child: GestureDetector(
@@ -298,6 +346,30 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
       ),
     );
   }
+
+  // ============================================================
+  // PILIHAN METODE PEMBAYARAN
+  // ============================================================
+
+  Widget _buildPaymentSelector() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1ECE7),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          _buildPaymentButton(value: 'online', title: 'Pembayaran Online'),
+          _buildPaymentButton(value: 'cashier', title: 'Bayar di Kasir'),
+        ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // PEMBAYARAN ONLINE
+  // ============================================================
 
   Widget _buildOnlinePayment() {
     return Container(
@@ -348,6 +420,10 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
       ),
     );
   }
+
+  // ============================================================
+  // PEMBAYARAN DI KASIR
+  // ============================================================
 
   Widget _buildCashierPayment() {
     return Column(
@@ -417,6 +493,10 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
     );
   }
 
+  // ============================================================
+  // SYARAT DAN KEBIJAKAN PRIVASI
+  // ============================================================
+
   Widget _buildTerms() {
     return InkWell(
       onTap: () {
@@ -454,6 +534,10 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
       ),
     );
   }
+
+  // ============================================================
+  // BAGIAN BAWAH: TOTAL DAN BAYAR SEKARANG
+  // ============================================================
 
   Widget _buildBottomSection() {
     return Container(
@@ -493,7 +577,7 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
             SizedBox(
               height: 46,
               child: ElevatedButton(
-                onPressed: _validatePayment,
+                onPressed: isNavigating ? null : _validatePayment,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.dark,
                   foregroundColor: Colors.white,
@@ -503,7 +587,7 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
                   ),
                 ),
                 child: Text(
-                  'Bayar Sekarang',
+                  isNavigating ? 'Memuat...' : 'Bayar Sekarang',
                   style: GoogleFonts.poppins(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
@@ -517,53 +601,73 @@ class _CustomerInformationScreenState extends State<CustomerInformationScreen> {
     );
   }
 
-  void _validatePayment() {
-    if (nameController.text.trim().isEmpty ||
-        emailController.text.trim().isEmpty) {
-      _showMessage('Lengkapi informasi pelanggan terlebih dahulu.');
-      return;
-    }
+  // ============================================================
+  // HALAMAN UTAMA
+  // ============================================================
 
-    if (isDineIn && tableController.text.trim().isEmpty) {
-      _showMessage('Masukkan nomor meja terlebih dahulu.');
-      return;
-    }
-
-    if (!agreeTerms) {
-      _showMessage('Setujui syarat dan kebijakan privasi terlebih dahulu.');
-      return;
-    }
-
-    if (selectedPayment == 'cashier' && !cashierConfirmation) {
-      _showMessage('Centang konfirmasi pembayaran di kasir.');
-      return;
-    }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PaymentSimulationScreen(
-          paymentMethod: selectedPayment,
-          customerName: nameController.text.trim(),
-          orderType: widget.orderType,
-          tableNumber: isDineIn ? tableController.text.trim() : '',
-          totalPayment: widget.totalPayment,
-          orderItems: widget.orderItems,
-
-          // Teruskan asal transaksi ke pembayaran.
-          isCartCheckout: widget.isCartCheckout,
-        ),
-      ),
-    );
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.dark,
-        content: Text(
-          message,
-          style: GoogleFonts.poppins(fontSize: 10, color: Colors.white),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.warmWhite,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLabel('Nama Lengkap*'),
+                    const SizedBox(height: 7),
+                    _buildTextField(
+                      controller: nameController,
+                      hintText: 'Masukkan nama lengkap',
+                      icon: Icons.person_outline,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildLabel('Email Customer*'),
+                    const SizedBox(height: 7),
+                    _buildTextField(
+                      controller: emailController,
+                      hintText: 'Masukkan email',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    if (isDineIn) ...[
+                      const SizedBox(height: 16),
+                      _buildLabel('Nomor Meja*'),
+                      const SizedBox(height: 7),
+                      _buildTextField(
+                        controller: tableController,
+                        hintText: 'Contoh: 12',
+                        icon: Icons.table_restaurant_outlined,
+                      ),
+                    ],
+                    const SizedBox(height: 22),
+                    _buildLabel('Anda memesan di'),
+                    const SizedBox(height: 8),
+                    _buildStoreLocation(),
+                    const SizedBox(height: 24),
+                    _buildLabel('Metode Pembayaran'),
+                    const SizedBox(height: 9),
+                    _buildPaymentSelector(),
+                    const SizedBox(height: 24),
+                    _buildLabel('Selesaikan Pembayaran'),
+                    const SizedBox(height: 9),
+                    if (selectedPayment == 'online')
+                      _buildOnlinePayment()
+                    else
+                      _buildCashierPayment(),
+                    const SizedBox(height: 14),
+                    _buildTerms(),
+                  ],
+                ),
+              ),
+            ),
+            _buildBottomSection(),
+          ],
         ),
       ),
     );

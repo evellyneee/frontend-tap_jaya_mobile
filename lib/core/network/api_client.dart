@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -20,7 +21,8 @@ class ApiClient {
           )
           .timeout(ApiConfig.connectionTimeout);
 
-      if (response.statusCode < 200 || response.statusCode >= 300) {
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300) {
         throw Exception(
           'HTTP ${response.statusCode}: ${response.body}',
         );
@@ -35,6 +37,8 @@ class ApiClient {
       }
 
       return decoded;
+    } on FormatException {
+      rethrow;
     } catch (error) {
       throw Exception('Gagal menghubungi API: $error');
     }

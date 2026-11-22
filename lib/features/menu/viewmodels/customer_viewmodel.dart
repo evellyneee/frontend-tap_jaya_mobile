@@ -1,42 +1,46 @@
+
 import 'package:flutter/foundation.dart';
 
-import '../repositories/customer_repository.dart';
+import '../models/customer_product.dart';
+import '../repositories/menu_repository.dart';
 
-class CustomerViewModel extends ChangeNotifier {
-  final CustomerRepository _repository;
+class MenuViewModel extends ChangeNotifier {
+  final MenuRepository _repository;
 
-  CustomerViewModel({CustomerRepository? repository})
-    : _repository = repository ?? CustomerRepository();
+  MenuViewModel({
+    MenuRepository? repository,
+  }) : _repository = repository ?? const MenuRepository();
 
-  List<Map<String, dynamic>> _products = [];
+  List<CustomerProduct> _products = [];
 
   bool _isLoading = false;
-
   String? _errorMessage;
 
-  List<Map<String, dynamic>> get products => _products;
+  List<CustomerProduct> get products =>
+      List.unmodifiable(_products);
 
   bool get isLoading => _isLoading;
 
   String? get errorMessage => _errorMessage;
 
-  Future<void> fetchProducts() async {
+  bool get hasError => _errorMessage != null;
+
+  bool get isEmpty => _products.isEmpty;
+
+  Future<void> loadProducts() async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      _products = await _repository.getProducts();
+      final result = await _repository.getProducts();
+
+      _products = result;
     } catch (error) {
       _errorMessage = error.toString();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  void clearError() {
-    _errorMessage = null;
-    notifyListeners();
   }
 }

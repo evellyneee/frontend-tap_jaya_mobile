@@ -1,16 +1,16 @@
-import 'dart:math' as math;
+import 'dart:convert';
 
-import '../../menu/models/official_menu_catalog.dart';
-import '../models/menu_preference.dart';
-import '../models/menu_recommendation.dart';
+import 'package:http/http.dart' as http;
 
-/// Content-Based Filtering menggunakan TF-IDF
-/// dan Cosine Similarity.
-///
-/// Service ini bertugas menghitung rekomendasi menu
-/// berdasarkan preferensi pelanggan dan data katalog.
+import 'package:tap_jaya_mobile/core/config/api_config.dart';
+import 'package:tap_jaya_mobile/features/menu/models/official_menu_catalog.dart';
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_preference.dart';
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_recommendation.dart';
+
 class MenuRecommendationService {
-  const MenuRecommendationService();
+  const MenuRecommendationService({http.Client? client}) : _client = client;
+
+  final http.Client? _client;
 
   static const Set<String> _drinkCategories = {
     'Signature',
@@ -28,265 +28,219 @@ class MenuRecommendationService {
     'Pizza Porter',
   };
 
-  static const Set<String> _stopWords = {
-    'dan',
-    'atau',
-    'dengan',
-    'yang',
-    'di',
-    'ke',
-    'dari',
-    'untuk',
-    'ini',
-    'itu',
-    'pada',
-    'dalam',
-    'serta',
-    'sebagai',
-    'dilengkapi',
-    'disajikan',
-    'pilihan',
-    'menjadi',
-    'memberikan',
-    'menggunakan',
-    'rasa',
-    'menu',
-    'khas',
-    'berpadu',
-    'memiliki',
-    'tersedia',
-    'lebih',
-    'satu',
-    'dua',
-    'tiga',
-    'the',
-    'with',
-    'of',
-    'and',
-  };
-
-  static final Map<String, String> _tasteQueries = {
-    'Creamy': 'creamy susu lembut krim latte cokelat',
-    'Manis': 'manis madu gula karamel cokelat susu',
-    'Segar': 'segar menyegarkan lemon jeruk buah teh',
-    'Kopi Kuat': 'kuat pekat espresso kopi robusta',
-    'Gurih': 'gurih asin ayam nasi keju mentega',
-    'Pedas': 'pedas cabai sambal spicy nashville',
-  };
-
-  static final Map<String, String> _groupQueries = {
-    'Semua': 'kopi teh susu nasi ayam pizza snack',
-    'Minuman': 'kopi espresso susu teh cokelat minuman',
-    'Makanan': 'nasi ayam pizza makanan gurih',
-    'Snack': 'snack camilan renyah saus gyoza',
-  };
-
-  /// Menghasilkan rekomendasi berdasarkan preferensi pelanggan.
-  List<MenuRecommendation> recommend(
+  /// Mengambil rekomendasi dari Python AI melalui backend Express.
+  ///
+  /// Hasil AI dicocokkan dengan katalog resmi Flutter
+  /// agar gambar, harga, dan navigasi detail tetap berfungsi.
+  Future<List<MenuRecommendation>> recommend(
     MenuPreference preference, {
     int limit = 3,
-  }) {
-    if (limit <= 0) return const [];
+  }) async {
+    if (limit <= 0) {
+      return <MenuRecommendation>[];
+    }
 
-    // Mengambil seluruh produk dari katalog.
-    // Add On tidak direkomendasikan sebagai produk utama.
-    final allProducts = OfficialMenuCatalog.menus
-        .where((product) => product.category != 'Add On')
-        .toList(growable: false);
+    final preferences = <String>[];
 
-    // Menyaring produk berdasarkan kategori dan anggaran.
-    final candidates = allProducts
-        .where((product) {
-          if (!_matchesGroup(product, preference.group)) {
-            return false;
+    if (preference.group != 'Semua') {
+      preferences.add(preference.group);
+    }
+
+    if (preference.taste != 'Apa saja') {
+      preferences.add(preference.taste);
+    }
+
+    if (preferences.isEmpty) {
+      preferences.add('Semua');
+    }
+
+    final requestBody = <String, dynamic>{'preferences': preferences};
+
+    if (preference.maximumPrice != null) {
+      requestBody['budget'] = preference.maximumPrice;
+    }
+
+    final uri = Uri.parse('${ApiConfig.baseUrl}/mobile/recommendations');
+
+    final client = _client ?? http.Client();
+    final ownsClient = _client == null;
+
+    try {
+      final response = await client
+          .post(
+            uri,
+            headers: const {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(requestBody),
+          )
+          .timeout(ApiConfig.connectionTimeout);
+
+      dynamic decoded;
+
+      try {
+        decoded = jsonDecode(response.body);
+      } on FormatException {
+        throw Exception('Backend mengembalikan respons JSON tidak valid.');
+      }
+
+      if (decoded is! Map<String, dynamic>) {
+        throw Exception('Format respons backend tidak valid.');
+      }
+
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300 ||
+          decoded['success'] != true) {
+        throw Exception(
+          decoded['message']?.toString() ?? 'Gagal mengambil rekomendasi AI.',
+        );
+      }
+
+      // Respons Express:
+      //
+      // {
+      //   "success": true,
+      //   "data": {
+      //     "total": 5,
+      //     "recommendations": [...]
+      //   }
+      // }
+
+      final data = decoded['data'];
+
+      if (data is! Map) {
+        throw Exception('Data rekomendasi AI tidak valid.');
+      }
+
+      final rawRecommendations = data['recommendations'];
+
+      if (rawRecommendations is! List) {
+        throw Exception('Daftar rekomendasi AI tidak ditemukan.');
+      }
+
+      // Menggunakan katalog resmi Flutter.
+      // Add On tidak boleh direkomendasikan sebagai menu utama.
+      final catalog = OfficialMenuCatalog.menus
+          .where((product) => product.category != 'Add On')
+          .toList(growable: false);
+
+      final results = <MenuRecommendation>[];
+      final usedProductIds = <String>{};
+
+      for (final raw in rawRecommendations) {
+        if (raw is! Map) {
+          continue;
+        }
+
+        // Python AI mengembalikan nama produk dari MySQL.
+        final aiName = raw['name']?.toString() ?? '';
+
+        if (aiName.trim().isEmpty) {
+          continue;
+        }
+
+        // Cocokkan berdasarkan nama.
+        //
+        // Kategori tidak ikut dibandingkan karena MySQL
+        // menggunakan kategori umum seperti "Makanan",
+        // sedangkan Flutter menggunakan "Main Course".
+        OfficialProduct? matchedProduct;
+
+        for (final product in catalog) {
+          if (_normalize(product.name) == _normalize(aiName)) {
+            matchedProduct = product;
+            break;
           }
+        }
 
-          final budget = preference.maximumPrice;
+        // Jangan membuat produk fiktif jika nama
+        // dari database tidak ada dalam katalog.
+        if (matchedProduct == null) {
+          continue;
+        }
 
-          if (budget != null && product.lowestPrice > budget) {
-            return false;
-          }
+        final product = matchedProduct;
 
-          return true;
-        })
-        .toList(growable: false);
+        // Pastikan kategori sesuai pilihan pelanggan.
+        if (!_matchesGroup(product.category, preference.group)) {
+          continue;
+        }
 
-    if (candidates.isEmpty) return const [];
+        // Pastikan harga resmi katalog sesuai anggaran.
+        final budget = preference.maximumPrice;
 
-    // Menghitung frekuensi kata dari seluruh katalog.
-    final documents = allProducts.map(_productTokens).toList(growable: false);
+        if (budget != null && product.lowestPrice > budget) {
+          continue;
+        }
 
-    final frequency = <String, int>{};
+        // Hindari produk yang sama muncul dua kali.
+        if (!usedProductIds.add(product.id)) {
+          continue;
+        }
 
-    for (final document in documents) {
-      for (final term in document.toSet()) {
-        frequency[term] = (frequency[term] ?? 0) + 1;
+        // Skor tetap berasal dari Python AI.
+        final rawScore = raw['score'];
+
+        final double score;
+
+        if (rawScore is num) {
+          score = rawScore.toDouble();
+        } else {
+          score = double.tryParse(rawScore?.toString() ?? '') ?? 0.0;
+        }
+
+        final rawReason = raw['reason']?.toString().trim();
+
+        final reason = rawReason != null && rawReason.isNotEmpty
+            ? rawReason
+            : 'Menu ini sesuai dengan preferensi '
+                  '${preference.taste.toLowerCase()} '
+                  'dan anggaran yang dipilih.';
+
+        results.add(
+          MenuRecommendation(product: product, score: score, reason: reason),
+        );
+
+        if (results.length >= limit) {
+          break;
+        }
+      }
+
+      return results;
+    } finally {
+      if (ownsClient) {
+        client.close();
       }
     }
-
-    // Menghitung Inverse Document Frequency (IDF).
-    final idf = <String, double>{};
-
-    for (final entry in frequency.entries) {
-      idf[entry.key] = math.log((1 + documents.length) / (1 + entry.value)) + 1;
-    }
-
-    // Membentuk kata kunci preferensi pelanggan.
-    final tasteQuery = _tasteQueries[preference.taste] ?? '';
-
-    final groupQuery =
-        _groupQueries[preference.group] ?? _groupQueries['Semua']!;
-
-    final userTokens = _tokens('$tasteQuery $groupQuery');
-
-    final userVector = _vector(userTokens, idf);
-
-    final scored = <MenuRecommendation>[];
-
-    // Menghitung skor kemiripan setiap produk.
-    for (final product in candidates) {
-      final productVector = _vector(_productTokens(product), idf);
-
-      final similarity = _cosine(userVector, productVector);
-
-      // Memberikan sedikit bobot pada keterjangkauan harga.
-      final budget = preference.maximumPrice;
-
-      final affordability = budget == null || budget <= 0
-          ? 0.0
-          : (1 - product.lowestPrice / budget).clamp(0.0, 1.0);
-
-      final score = 0.95 * similarity + 0.05 * affordability;
-
-      final reason =
-          'Cocok dengan preferensi ${preference.taste.toLowerCase()} '
-          'dan anggaranmu.';
-
-      scored.add(
-        MenuRecommendation(product: product, score: score, reason: reason),
-      );
-    }
-
-    // Mengurutkan hasil berdasarkan skor tertinggi.
-    scored.sort((a, b) {
-      final byScore = b.score.compareTo(a.score);
-
-      if (byScore != 0) return byScore;
-
-      final byPrice = a.product.lowestPrice.compareTo(b.product.lowestPrice);
-
-      return byPrice != 0 ? byPrice : a.product.name.compareTo(b.product.name);
-    });
-
-    return scored.take(limit).toList(growable: false);
   }
 
-  /// Memeriksa kesesuaian kategori produk.
-  bool _matchesGroup(OfficialProduct product, String group) {
+  /// Memastikan kategori menu sesuai preferensi.
+  bool _matchesGroup(String category, String group) {
     switch (group) {
       case 'Minuman':
-        return _drinkCategories.contains(product.category);
+        return _drinkCategories.contains(category);
 
       case 'Makanan':
-        return _foodCategories.contains(product.category);
+        return _foodCategories.contains(category);
 
       case 'Snack':
-        return product.category == 'Snack';
+        return category == 'Snack';
 
+      case 'Semua':
       default:
         return true;
     }
   }
 
-  /// Mengubah informasi produk menjadi kumpulan kata.
-  List<String> _productTokens(OfficialProduct product) {
-    final text = '${product.name} ${product.category} ${product.description}';
-
-    final lower = text.toLowerCase();
-
-    final extra = <String>[];
-
-    if (RegExp(r'susu|latte|milk|krim|creamy|cokelat|lembut').hasMatch(lower)) {
-      extra.addAll(['creamy', 'susu', 'lembut']);
-    }
-
-    if (RegExp(r'manis|madu|gula|karamel|cokelat|honey').hasMatch(lower)) {
-      extra.addAll(['manis', 'madu']);
-    }
-
-    if (RegExp(r'segar|lemon|jeruk|orange|buah|mint|lychee|tea')
-        .hasMatch(lower)) {
-      extra.addAll(['segar', 'menyegarkan']);
-    }
-
-    if (RegExp(r'espresso|robusta|pekat|kuat|americano').hasMatch(lower)) {
-      extra.addAll(['kopi', 'kuat', 'espresso']);
-    }
-
-    if (RegExp(r'ayam|nasi|saus|keju|mentega|gurih|pizza|salted')
-        .hasMatch(lower)) {
-      extra.addAll(['gurih', 'makanan']);
-    }
-
-    if (RegExp(r'pedas|cabai|sambal|chili|nashville').hasMatch(lower)) {
-      extra.addAll(['pedas', 'cabai']);
-    }
-
-    if (product.category == 'Snack') {
-      extra.addAll(['snack', 'camilan', 'renyah']);
-    }
-
-    return [..._tokens(text), ...extra, ...extra];
-  }
-
-  /// Memecah teks menjadi token.
-  List<String> _tokens(String text) {
-    return RegExp(r'[a-z0-9]+')
-        .allMatches(text.toLowerCase())
-        .map((match) => match.group(0)!)
-        .where((term) => term.length > 2 && !_stopWords.contains(term))
-        .toList(growable: false);
-  }
-
-  /// Menghitung bobot TF-IDF setiap token.
-  Map<String, double> _vector(List<String> tokens, Map<String, double> idf) {
-    if (tokens.isEmpty) return {};
-
-    final counts = <String, int>{};
-
-    for (final token in tokens) {
-      counts[token] = (counts[token] ?? 0) + 1;
-    }
-
-    final weights = <String, double>{};
-
-    for (final entry in counts.entries) {
-      weights[entry.key] =
-          (entry.value / tokens.length) * (idf[entry.key] ?? 1.0);
-    }
-
-    return weights;
-  }
-
-  /// Menghitung Cosine Similarity antara dua vektor.
-  double _cosine(Map<String, double> a, Map<String, double> b) {
-    if (a.isEmpty || b.isEmpty) return 0;
-
-    var dot = 0.0;
-    var sizeA = 0.0;
-    var sizeB = 0.0;
-
-    for (final entry in a.entries) {
-      sizeA += entry.value * entry.value;
-      dot += entry.value * (b[entry.key] ?? 0);
-    }
-
-    for (final value in b.values) {
-      sizeB += value * value;
-    }
-
-    if (sizeA == 0 || sizeB == 0) return 0;
-
-    return dot / (math.sqrt(sizeA) * math.sqrt(sizeB));
+  /// Menyamakan nama produk tanpa membedakan
+  /// huruf besar, spasi, atau tanda baca.
+  String _normalize(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll('&', 'and')
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ');
   }
 }

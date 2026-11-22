@@ -1,10 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
-
 import 'package:tap_jaya_mobile/features/orders/viewmodels/order_session_store.dart';
-
 import 'package:tap_jaya_mobile/features/menu/views/home_screen.dart';
 import 'package:tap_jaya_mobile/features/menu/views/info_cafe_screen.dart';
 
@@ -15,15 +15,27 @@ class StatusScreen extends StatefulWidget {
   State<StatusScreen> createState() => _StatusScreenState();
 }
 
-class _StatusScreenState extends State<StatusScreen> {
+class _StatusScreenState extends State<StatusScreen>
+    with WidgetsBindingObserver {
   int selectedTab = 0;
 
   final OrderSessionStore orderStore = OrderSessionStore.instance;
 
+  Timer? _statusTimer;
+
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
     orderStore.addListener(_refresh);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      _synchronizeOrders();
+      _startStatusTimer();
+    });
   }
 
   void _refresh() {
@@ -32,8 +44,38 @@ class _StatusScreenState extends State<StatusScreen> {
     }
   }
 
+  void _synchronizeOrders() {
+    if (!mounted) return;
+
+    orderStore.synchronizeActiveOrders();
+  }
+
+  void _startStatusTimer() {
+    _statusTimer?.cancel();
+
+    _statusTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _synchronizeOrders(),
+    );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _synchronizeOrders();
+      _startStatusTimer();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _statusTimer?.cancel();
+      _statusTimer = null;
+    }
+  }
+
   @override
   void dispose() {
+    _statusTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     orderStore.removeListener(_refresh);
     super.dispose();
   }
@@ -83,7 +125,9 @@ class _StatusScreenState extends State<StatusScreen> {
       'Desember',
     ];
 
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+    return '${date.day} '
+        '${months[date.month - 1]} '
+        '${date.year}';
   }
 
   String formatDateTime(DateTime date) {
@@ -91,6 +135,12 @@ class _StatusScreenState extends State<StatusScreen> {
     final minute = date.minute.toString().padLeft(2, '0');
 
     return '${formatDate(date)}, $hour:$minute';
+  }
+
+  bool _isPaymentVerified(SessionOrder order) {
+    final status = order.paymentStatus?.trim().toLowerCase();
+
+    return status == 'paid' || status == 'success' || status == 'settlement';
   }
 
   @override
@@ -113,9 +163,9 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // ===================================
+  // ===================================================
   // HEADER
-  // ===================================
+  // ===================================================
 
   Widget _buildHeader() {
     return Container(
@@ -150,6 +200,10 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
+  // ===================================================
+  // TAB PESANAN AKTIF DAN RIWAYAT
+  // ===================================================
+
   Widget _buildTabBar() {
     return Container(
       color: Colors.white,
@@ -172,6 +226,10 @@ class _StatusScreenState extends State<StatusScreen> {
           setState(() {
             selectedTab = index;
           });
+
+          if (index == 0) {
+            _synchronizeOrders();
+          }
         },
         child: Container(
           height: 50,
@@ -197,56 +255,121 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // ===================================
+  // ===================================================
   // PESANAN AKTIF
-  // ===================================
+  // ===================================================
 
   Widget _buildActiveOrders() {
     final orders = orderStore.activeOrders;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
-      children: [
-        Text(
-          'Pesanan Aktif',
-          style: GoogleFonts.poppins(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            color: AppColors.dark,
+    return RefreshIndicator(
+      color: AppColors.red,
+      onRefresh: () => orderStore.synchronizeActiveOrders(),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 28),
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Pesanan Aktif',
+                  style: GoogleFonts.poppins(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.dark,
+                  ),
+                ),
+              ),
+              if (orderStore.isSynchronizing)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.red,
+                  ),
+                ),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Perbarui status pesanan',
+                onPressed: orderStore.isSynchronizing
+                    ? null
+                    : _synchronizeOrders,
+                icon: const Icon(Icons.refresh, size: 21, color: AppColors.red),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Pantau perkembangan pesananmu di sini',
-          style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
-        ),
-        const SizedBox(height: 18),
-
-        if (orders.isEmpty)
-          _buildEmptyState(
-            icon: Icons.receipt_long_outlined,
-            title: 'Belum ada pesanan aktif',
-            subtitle: 'Pesanan yang sudah dibayar akan muncul di sini.',
-          )
-        else
-          ...orders.map(
-            (order) => Padding(
-              key: ValueKey(order.id),
-              padding: const EdgeInsets.only(bottom: 18),
-              child: Column(
-                children: [
-                  _buildOrderInformation(order),
-                  const SizedBox(height: 14),
-                  _buildStatusProgress(order),
-                ],
+          const SizedBox(height: 4),
+          Text(
+            'Pantau perkembangan pesananmu di sini',
+            style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
+          ),
+          const SizedBox(height: 12),
+          if (orderStore.lastSyncError != null)
+            _buildSyncWarning(orderStore.lastSyncError!),
+          const SizedBox(height: 6),
+          if (orders.isEmpty)
+            _buildEmptyState(
+              icon: Icons.receipt_long_outlined,
+              title: 'Belum ada pesanan aktif',
+              subtitle: 'Pesanan yang sudah dibuat akan muncul di sini.',
+            )
+          else
+            ...orders.map(
+              (order) => Padding(
+                key: ValueKey(order.id),
+                padding: const EdgeInsets.only(bottom: 18),
+                child: Column(
+                  children: [
+                    _buildOrderInformation(order),
+                    const SizedBox(height: 14),
+                    _buildStatusProgress(order),
+                  ],
+                ),
               ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 
+  Widget _buildSyncWarning(String message) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF6E9),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFF1D6A5)),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.wifi_off_outlined,
+            color: Color(0xFF9A691C),
+            size: 18,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              '$message Tarik layar ke bawah untuk mencoba lagi.',
+              style: GoogleFonts.poppins(fontSize: 10, color: AppColors.dark),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===================================================
+  // INFORMASI PESANAN
+  // ===================================================
+
   Widget _buildOrderInformation(SessionOrder order) {
+    final verified = _isPaymentVerified(order);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -289,43 +412,40 @@ class _StatusScreenState extends State<StatusScreen> {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5EB),
+                  color: verified
+                      ? const Color(0xFFE8F5EB)
+                      : const Color(0xFFF4F4F4),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Sudah Dibayar',
+                  verified ? 'Sudah Dibayar' : 'Belum Terverifikasi',
                   style: GoogleFonts.poppins(
                     fontSize: 9,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF278A4B),
+                    color: verified ? const Color(0xFF278A4B) : AppColors.grey,
                   ),
                 ),
               ),
             ],
           ),
-
           const SizedBox(height: 14),
           const Divider(height: 1, color: AppColors.lightGrey),
           const SizedBox(height: 14),
-
           _buildInfoRow(label: 'Nama Pelanggan', value: order.customerName),
-
           if (order.tableNumber.isNotEmpty) ...[
             const SizedBox(height: 10),
             _buildInfoRow(label: 'Nomor Meja', value: order.tableNumber),
           ],
-
           const SizedBox(height: 10),
           _buildInfoRow(label: 'Tipe Pesanan', value: order.orderType),
-
           const SizedBox(height: 10),
           _buildInfoRow(
             label: 'Metode Pembayaran',
             value: order.paymentMethod == 'online' ? 'QRIS' : 'Bayar di Kasir',
           ),
-
+          const SizedBox(height: 10),
+          _buildInfoRow(label: 'Status Pesanan', value: order.backendStatus),
           const SizedBox(height: 16),
-
           Text(
             'Detail Pesanan',
             style: GoogleFonts.poppins(
@@ -334,18 +454,14 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 12),
-
           ...order.items.map(
             (item) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _buildProductItem(item),
             ),
           ),
-
           const Divider(height: 18, color: AppColors.lightGrey),
-
           _buildInfoRow(
             label: 'Total Pembayaran',
             value: formatPrice(order.totalPayment),
@@ -400,9 +516,7 @@ class _StatusScreenState extends State<StatusScreen> {
             },
           ),
         ),
-
         const SizedBox(width: 10),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,7 +529,6 @@ class _StatusScreenState extends State<StatusScreen> {
                   color: AppColors.dark,
                 ),
               ),
-
               if (item.size.isNotEmpty)
                 Text(
                   item.size,
@@ -424,7 +537,6 @@ class _StatusScreenState extends State<StatusScreen> {
                     color: AppColors.grey,
                   ),
                 ),
-
               if (item.note.isNotEmpty)
                 Text(
                   item.note,
@@ -438,7 +550,6 @@ class _StatusScreenState extends State<StatusScreen> {
             ],
           ),
         ),
-
         Text(
           '${item.quantity}x',
           style: GoogleFonts.poppins(
@@ -451,18 +562,22 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // ===================================
-  // PROGRES PESANAN
-  // ===================================
+  // ===================================================
+  // PROGRES PESANAN DARI BACKEND
+  // ===================================================
 
   Widget _buildStatusProgress(SessionOrder order) {
     final progress = order.progress;
 
-    final bool received = progress.index >= OrderProgress.received.index;
+    final received = progress.index >= OrderProgress.received.index;
 
-    final bool processing = progress.index >= OrderProgress.processing.index;
+    final processing = progress.index >= OrderProgress.processing.index;
 
-    final bool completed = progress.index >= OrderProgress.completed.index;
+    final completed = progress.index >= OrderProgress.completed.index;
+
+    final isReady = order.backendStatus == 'Siap';
+
+    final isFinished = order.backendStatus == 'Selesai';
 
     return Container(
       width: double.infinity,
@@ -483,9 +598,12 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
+          const SizedBox(height: 6),
+          Text(
+            'Status diperbarui otomatis dari sistem cafe.',
+            style: GoogleFonts.poppins(fontSize: 9, color: AppColors.grey),
+          ),
           const SizedBox(height: 18),
-
           _buildProgressItem(
             title: 'Pesanan Diterima',
             subtitle: 'Pesanan sudah diterima',
@@ -493,7 +611,6 @@ class _StatusScreenState extends State<StatusScreen> {
             completed: received,
             last: false,
           ),
-
           _buildProgressItem(
             title: 'Sedang Diproses',
             subtitle: 'Barista sedang menyiapkan pesanan',
@@ -501,32 +618,27 @@ class _StatusScreenState extends State<StatusScreen> {
             completed: processing,
             last: false,
           ),
-
           _buildProgressItem(
             title: 'Pesanan Selesai',
             subtitle: completed
-                ? 'Pesanan siap diambil oleh pelanggan'
+                ? 'Pesanan sudah selesai disiapkan'
                 : 'Menunggu pesanan selesai dibuat',
             active: completed,
             completed: completed,
             last: true,
           ),
-
           const SizedBox(height: 14),
-
-          if (progress == OrderProgress.completed) _buildReadyNotice(),
-
-          if (progress == OrderProgress.completed) const SizedBox(height: 12),
-
-          // Kontrol simulasi untuk demonstrasi.
-          // Tidak menggunakan konfirmasi tambahan.
-          _buildSimulationButton(order),
+          if (isReady || isFinished) ...[
+            _buildReadyNotice(isFinished: isFinished),
+            const SizedBox(height: 12),
+            _buildPickupButton(order),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildReadyNotice() {
+  Widget _buildReadyNotice({required bool isFinished}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -546,9 +658,15 @@ class _StatusScreenState extends State<StatusScreen> {
           const SizedBox(width: 9),
           Expanded(
             child: Text(
-              'Pesanan sudah selesai disiapkan dan '
-              'siap diambil. Pesanan akan masuk '
-              'ke riwayat setelah pelanggan mengambilnya.',
+              isFinished
+                  ? 'Pesanan telah ditandai selesai '
+                        'oleh pihak cafe. '
+                        'Silakan konfirmasi jika pesanan '
+                        'sudah diterima.'
+                  : 'Pesanan sudah selesai disiapkan '
+                        'dan siap diambil. '
+                        'Konfirmasikan setelah pesanan '
+                        'benar-benar diterima.',
               style: GoogleFonts.poppins(
                 fontSize: 10,
                 height: 1.5,
@@ -561,37 +679,19 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  Widget _buildSimulationButton(SessionOrder order) {
-    final progress = order.progress;
-
-    String label;
-    VoidCallback action;
-
-    if (progress == OrderProgress.received) {
-      label = 'Simulasikan Pesanan Diproses';
-      action = () {
-        orderStore.startProcessing(order.id);
-      };
-    } else if (progress == OrderProgress.processing) {
-      label = 'Simulasikan Pesanan Selesai';
-      action = () {
-        orderStore.completeOrder(order.id);
-      };
-    } else if (progress == OrderProgress.completed) {
-      label = 'Simulasikan Pesanan Diambil';
-      action = () {
-        // Simulasi konfirmasi admin/barista.
-        // Langsung pindah ke Riwayat tanpa pop-up.
-        orderStore.pickUpOrder(order.id);
-      };
-    } else {
-      return const SizedBox.shrink();
-    }
-
+  Widget _buildPickupButton(SessionOrder order) {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: action,
+        onPressed: () {
+          orderStore.pickUpOrder(order.id);
+
+          if (mounted) {
+            setState(() {
+              selectedTab = 1;
+            });
+          }
+        },
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.dark,
           side: const BorderSide(color: AppColors.lightGrey),
@@ -601,7 +701,7 @@ class _StatusScreenState extends State<StatusScreen> {
           ),
         ),
         child: Text(
-          label,
+          'Konfirmasi Pesanan Sudah Diambil',
           textAlign: TextAlign.center,
           style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w600),
         ),
@@ -643,7 +743,6 @@ class _StatusScreenState extends State<StatusScreen> {
                     )
                   : null,
             ),
-
             if (!last)
               Container(
                 width: 2,
@@ -652,9 +751,7 @@ class _StatusScreenState extends State<StatusScreen> {
               ),
           ],
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 18),
@@ -685,9 +782,9 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // ===================================
+  // ===================================================
   // RIWAYAT PESANAN
-  // ===================================
+  // ===================================================
 
   Widget _buildHistory() {
     final orders = orderStore.historyOrders;
@@ -703,16 +800,12 @@ class _StatusScreenState extends State<StatusScreen> {
             color: AppColors.dark,
           ),
         ),
-
         const SizedBox(height: 4),
-
         Text(
           'Lihat kembali transaksi yang pernah dilakukan',
           style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
         ),
-
         const SizedBox(height: 18),
-
         if (orders.isEmpty)
           _buildEmptyState(
             icon: Icons.history,
@@ -764,9 +857,7 @@ class _StatusScreenState extends State<StatusScreen> {
               ),
             ],
           ),
-
           const SizedBox(height: 5),
-
           Text(
             order.id,
             style: GoogleFonts.poppins(
@@ -775,23 +866,18 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 10),
-
           ...order.items.map(
             (item) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _buildProductItem(item),
             ),
           ),
-
           const Divider(height: 20, color: AppColors.lightGrey),
-
           _buildInfoRow(
             label: 'Total Pembayaran',
             value: formatPrice(order.totalPayment),
           ),
-
           if (order.pickedUpAt != null) ...[
             const SizedBox(height: 10),
             _buildInfoRow(
@@ -804,9 +890,9 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // ===================================
-  // TAMPILAN KOSONG
-  // ===================================
+  // ===================================================
+  // EMPTY STATE
+  // ===================================================
 
   Widget _buildEmptyState({
     required IconData icon,
@@ -824,9 +910,7 @@ class _StatusScreenState extends State<StatusScreen> {
       child: Column(
         children: [
           Icon(icon, size: 44, color: AppColors.grey),
-
           const SizedBox(height: 12),
-
           Text(
             title,
             textAlign: TextAlign.center,
@@ -836,9 +920,7 @@ class _StatusScreenState extends State<StatusScreen> {
               color: AppColors.dark,
             ),
           ),
-
           const SizedBox(height: 6),
-
           Text(
             subtitle,
             textAlign: TextAlign.center,
@@ -849,9 +931,9 @@ class _StatusScreenState extends State<StatusScreen> {
     );
   }
 
-  // ===================================
+  // ===================================================
   // NAVIGASI BAWAH
-  // ===================================
+  // ===================================================
 
   Widget _buildBottomNavigation() {
     return SafeArea(
@@ -904,9 +986,7 @@ class _StatusScreenState extends State<StatusScreen> {
               size: 31,
               color: active ? AppColors.red : const Color(0xFF737373),
             ),
-
             const SizedBox(height: 5),
-
             Text(
               label,
               textAlign: TextAlign.center,

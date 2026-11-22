@@ -2,17 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:tap_jaya_mobile/core/constants/app_colors.dart';
-
 import 'package:tap_jaya_mobile/features/menu/models/official_menu_catalog.dart';
+import 'package:tap_jaya_mobile/features/menu/views/detail_official_screen.dart';
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_preference.dart';
+import 'package:tap_jaya_mobile/features/recommendations/models/menu_recommendation.dart';
 import 'package:tap_jaya_mobile/features/recommendations/services/menu_recommendation_service.dart';
 
-import 'package:tap_jaya_mobile/features/recommendations/models/menu_preference.dart';
-
-import 'package:tap_jaya_mobile/features/recommendations/models/menu_recommendation.dart';
-
-import 'package:tap_jaya_mobile/features/menu/views/detail_official_screen.dart';
-
-/// Halaman preferensi + 3 rekomendasi yang terhubung ke detail menu existing.
 class MenuRecommendationScreen extends StatefulWidget {
   const MenuRecommendationScreen({super.key});
 
@@ -23,11 +18,19 @@ class MenuRecommendationScreen extends StatefulWidget {
 
 class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
   final _engine = const MenuRecommendationService();
+
   String _group = 'Minuman';
   String _taste = 'Creamy';
   int _budget = 40000;
 
+  List<MenuRecommendation> _recommended = [];
+  bool _loading = false;
+  String? _error;
+
+  int _requestVersion = 0;
+
   static const _groups = ['Semua', 'Minuman', 'Makanan', 'Snack'];
+
   static const _tastes = [
     'Creamy',
     'Manis',
@@ -37,17 +40,85 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
     'Pedas',
     'Apa saja',
   ];
+
   static const _budgets = [25000, 40000, 60000, 80000, 0];
 
   @override
-  Widget build(BuildContext context) {
+  void initState() {
+    super.initState();
+    _loadRecommendations();
+  }
+
+  Future<void> _loadRecommendations() async {
+    final requestVersion = ++_requestVersion;
+
     final preference = MenuPreference(
       group: _group,
       taste: _taste,
       maximumPrice: _budget == 0 ? null : _budget,
     );
-    final recommended = _engine.recommend(preference);
 
+    setState(() {
+      _loading = true;
+      _error = null;
+      _recommended = [];
+    });
+
+    try {
+      final results = await _engine.recommend(preference, limit: 3);
+
+      if (!mounted || requestVersion != _requestVersion) {
+        return;
+      }
+
+      setState(() {
+        _recommended = results;
+        _loading = false;
+      });
+    } catch (error) {
+      if (!mounted || requestVersion != _requestVersion) {
+        return;
+      }
+
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+    }
+  }
+
+  void _changeGroup(String value) {
+    if (_group == value) return;
+
+    setState(() {
+      _group = value;
+    });
+
+    _loadRecommendations();
+  }
+
+  void _changeTaste(String value) {
+    if (_taste == value) return;
+
+    setState(() {
+      _taste = value;
+    });
+
+    _loadRecommendations();
+  }
+
+  void _changeBudget(int value) {
+    if (_budget == value) return;
+
+    setState(() {
+      _budget = value;
+    });
+
+    _loadRecommendations();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.warmWhite,
       appBar: AppBar(
@@ -72,52 +143,51 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
             ),
             const SizedBox(height: 5),
             Text(
-              'Pilih selera dan anggaran. Sistem akan membandingkan karakteristik menu untuk menampilkan 3 pilihan teratas.',
+              'Pilih selera dan anggaran. '
+              'Sistem AI akan membandingkan '
+              'karakteristik menu untuk '
+              'menampilkan 3 pilihan teratas.',
               style: GoogleFonts.poppins(fontSize: 12, color: AppColors.grey),
             ),
             const SizedBox(height: 22),
+
             _heading('Jenis menu'),
             const SizedBox(height: 8),
+
             Wrap(
               spacing: 7,
               runSpacing: 2,
-              children: _groups
-                  .map(
-                    (group) => ChoiceChip(
-                      label: Text(
-                        group,
-                        style: GoogleFonts.poppins(fontSize: 11),
-                      ),
-                      selected: _group == group,
-                      selectedColor: const Color(0xFFF1CBC5),
-                      onSelected: (_) => setState(() => _group = group),
-                    ),
-                  )
-                  .toList(),
+              children: _groups.map((group) {
+                return ChoiceChip(
+                  label: Text(group, style: GoogleFonts.poppins(fontSize: 11)),
+                  selected: _group == group,
+                  selectedColor: const Color(0xFFF1CBC5),
+                  onSelected: (_) => _changeGroup(group),
+                );
+              }).toList(),
             ),
+
             const SizedBox(height: 16),
             _heading('Rasa favorit'),
             const SizedBox(height: 8),
+
             Wrap(
               spacing: 7,
               runSpacing: 2,
-              children: _tastes
-                  .map(
-                    (taste) => ChoiceChip(
-                      label: Text(
-                        taste,
-                        style: GoogleFonts.poppins(fontSize: 11),
-                      ),
-                      selected: _taste == taste,
-                      selectedColor: const Color(0xFFF1CBC5),
-                      onSelected: (_) => setState(() => _taste = taste),
-                    ),
-                  )
-                  .toList(),
+              children: _tastes.map((taste) {
+                return ChoiceChip(
+                  label: Text(taste, style: GoogleFonts.poppins(fontSize: 11)),
+                  selected: _taste == taste,
+                  selectedColor: const Color(0xFFF1CBC5),
+                  onSelected: (_) => _changeTaste(taste),
+                );
+              }).toList(),
             ),
+
             const SizedBox(height: 16),
             _heading('Anggaran maksimal'),
             const SizedBox(height: 8),
+
             DropdownButtonFormField<int>(
               initialValue: _budget,
               decoration: InputDecoration(
@@ -127,26 +197,26 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              items: _budgets
-                  .map(
-                    (amount) => DropdownMenuItem<int>(
-                      value: amount,
-                      child: Text(
-                        amount == 0
-                            ? 'Tanpa batas'
-                            : OfficialMenuCatalog.rupiah(amount),
-                        style: GoogleFonts.poppins(fontSize: 12),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              items: _budgets.map((amount) {
+                return DropdownMenuItem<int>(
+                  value: amount,
+                  child: Text(
+                    amount == 0
+                        ? 'Tanpa batas'
+                        : OfficialMenuCatalog.rupiah(amount),
+                    style: GoogleFonts.poppins(fontSize: 12),
+                  ),
+                );
+              }).toList(),
               onChanged: (value) {
                 if (value != null) {
-                  setState(() => _budget = value);
+                  _changeBudget(value);
                 }
               },
             ),
+
             const SizedBox(height: 24),
+
             Row(
               children: [
                 const Icon(Icons.auto_awesome, color: AppColors.red, size: 20),
@@ -154,14 +224,29 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
                 Expanded(child: _heading('3 Rekomendasi Untukmu')),
               ],
             ),
+
             const SizedBox(height: 10),
-            if (recommended.isEmpty)
+
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.all(30),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_error != null)
+              _errorResult()
+            else if (_recommended.isEmpty)
               _emptyResult()
             else
-              ...recommended.map((result) => _recommendationCard(result)),
+              ..._recommended.map((result) => _recommendationCard(result)),
+
             const SizedBox(height: 16),
+
             Text(
-              'Saran menu dihitung dari kemiripan deskripsi dan atribut produk. Ini bukan rekomendasi berdasarkan data pembelian pribadi.',
+              'Saran menu dihitung menggunakan '
+              'Content-Based Filtering, TF-IDF, '
+              'dan Cosine Similarity pada layanan '
+              'AI TAP JAYA. Rekomendasi tidak '
+              'menggunakan riwayat pembelian pribadi.',
               style: GoogleFonts.poppins(fontSize: 10, color: AppColors.grey),
             ),
           ],
@@ -170,26 +255,62 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
     );
   }
 
-  Widget _heading(String value) => Text(
-    value,
-    style: GoogleFonts.poppins(
-      fontSize: 13,
-      fontWeight: FontWeight.w600,
-      color: AppColors.dark,
-    ),
-  );
+  Widget _heading(String value) {
+    return Text(
+      value,
+      style: GoogleFonts.poppins(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        color: AppColors.dark,
+      ),
+    );
+  }
 
-  Widget _emptyResult() => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Text(
-      'Belum ada menu yang sesuai. Pilih jenis menu lain atau naikkan batas anggaran.',
-      style: GoogleFonts.poppins(fontSize: 12),
-    ),
-  );
+  Widget _emptyResult() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        'Belum ada menu yang sesuai. '
+        'Pilih jenis menu lain atau '
+        'naikkan batas anggaran.',
+        style: GoogleFonts.poppins(fontSize: 12),
+      ),
+    );
+  }
+
+  Widget _errorResult() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gagal mengambil rekomendasi AI.',
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: Colors.red,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(_error ?? '', style: GoogleFonts.poppins(fontSize: 11)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: _loadRecommendations,
+            child: const Text('Coba Lagi'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _recommendationCard(MenuRecommendation result) {
     final product = result.product;
@@ -233,6 +354,7 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
                       ),
               ),
               const SizedBox(width: 10),
+
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -273,6 +395,7 @@ class _MenuRecommendationScreenState extends State<MenuRecommendationScreen> {
                   ],
                 ),
               ),
+
               const Icon(Icons.chevron_right, color: AppColors.red),
             ],
           ),

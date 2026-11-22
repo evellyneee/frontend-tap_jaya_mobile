@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 
 import '../models/menu_preference.dart';
@@ -11,28 +10,31 @@ class MenuRecommendationViewModel extends ChangeNotifier {
   static final MenuRecommendationViewModel instance =
       MenuRecommendationViewModel._();
 
-  final MenuRecommendationService _service =
-      const MenuRecommendationService();
+  final MenuRecommendationService _service = const MenuRecommendationService();
 
-  // Preferensi awal pengguna.
   String _group = 'Minuman';
   String _taste = 'Creamy';
   int _budget = 40000;
 
-  // Mengambil nilai preferensi.
+  List<MenuRecommendation> _recommendations = [];
+
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  int _requestVersion = 0;
+
   String get group => _group;
   String get taste => _taste;
   int get budget => _budget;
 
-  // Pilihan kategori menu.
-  static const List<String> groups = [
-    'Semua',
-    'Minuman',
-    'Makanan',
-    'Snack',
-  ];
+  List<MenuRecommendation> get recommendations =>
+      List.unmodifiable(_recommendations);
 
-  // Pilihan rasa.
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+
+  static const List<String> groups = ['Semua', 'Minuman', 'Makanan', 'Snack'];
+
   static const List<String> tastes = [
     'Creamy',
     'Manis',
@@ -40,18 +42,11 @@ class MenuRecommendationViewModel extends ChangeNotifier {
     'Kopi Kuat',
     'Gurih',
     'Pedas',
+    'Apa saja',
   ];
 
-  // Pilihan anggaran.
-  static const List<int> budgets = [
-    25000,
-    40000,
-    60000,
-    80000,
-    0,
-  ];
+  static const List<int> budgets = [25000, 40000, 60000, 80000, 0];
 
-  // Membentuk preferensi berdasarkan pilihan pengguna.
   MenuPreference get preference {
     return MenuPreference(
       group: _group,
@@ -60,41 +55,65 @@ class MenuRecommendationViewModel extends ChangeNotifier {
     );
   }
 
-  // Mengambil hasil rekomendasi dari Service.
-  List<MenuRecommendation> get recommendations {
-    return _service.recommend(preference);
+  Future<void> loadRecommendations() async {
+    final currentRequest = ++_requestVersion;
+
+    _isLoading = true;
+    _errorMessage = null;
+    _recommendations = [];
+    notifyListeners();
+
+    try {
+      final results = await _service.recommend(preference, limit: 3);
+
+      if (currentRequest != _requestVersion) {
+        return;
+      }
+
+      _recommendations = results;
+      _isLoading = false;
+      notifyListeners();
+    } catch (error) {
+      if (currentRequest != _requestVersion) {
+        return;
+      }
+
+      _recommendations = [];
+      _errorMessage = error.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // Mengubah kategori menu.
   void updateGroup(String value) {
     if (!groups.contains(value)) return;
+    if (_group == value) return;
 
     _group = value;
-    notifyListeners();
+    loadRecommendations();
   }
 
-  // Mengubah preferensi rasa.
   void updateTaste(String value) {
     if (!tastes.contains(value)) return;
+    if (_taste == value) return;
 
     _taste = value;
-    notifyListeners();
+    loadRecommendations();
   }
 
-  // Mengubah batas anggaran.
   void updateBudget(int value) {
     if (!budgets.contains(value)) return;
+    if (_budget == value) return;
 
     _budget = value;
-    notifyListeners();
+    loadRecommendations();
   }
 
-  // Mengembalikan preferensi ke pengaturan awal.
   void resetPreferences() {
     _group = 'Minuman';
     _taste = 'Creamy';
     _budget = 40000;
 
-    notifyListeners();
+    loadRecommendations();
   }
 }
